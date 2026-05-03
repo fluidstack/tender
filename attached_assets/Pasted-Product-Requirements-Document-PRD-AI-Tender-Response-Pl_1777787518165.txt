@@ -1,0 +1,402 @@
+Product Requirements Document (PRD)
+AI Tender Response Platform
+1. Product Overview
+1.1 Product Name
+TenderAI (placeholder — you can rename later)
+
+1.2 Product Summary
+TenderAI is an end‑to‑end platform that helps businesses discover government tenders and grants, assess eligibility, and automatically generate compliant tender responses.
+It uses AI to:
+
+Analyse business profiles
+
+Match tenders and grants
+
+Parse tender documents
+
+Extract requirements
+
+Identify compliance gaps
+
+Generate draft responses
+
+Produce checklists and risk reports
+
+1.3 Target Users
+SMEs responding to tenders
+
+Large enterprises with procurement teams
+
+Consultants preparing tenders for clients
+
+Not‑for‑profits
+
+Startups seeking grants
+
+1.4 Problem Statement
+Businesses struggle with:
+
+Finding relevant tenders
+
+Understanding complex tender documents
+
+Meeting compliance requirements
+
+Writing high‑quality responses
+
+Managing repetitive content
+
+TenderAI solves this by automating 70–90% of the tender response process.
+
+2. Goals & Non‑Goals
+2.1 Goals
+Automate tender discovery
+
+Automate tender document analysis
+
+Automate response drafting
+
+Provide compliance and risk insights
+
+Reduce tender preparation time by 60–80%
+
+Improve win‑rate through structured, compliant responses
+
+2.2 Non‑Goals
+Providing legal advice
+
+Guaranteeing tender wins
+
+Generating financial pricing
+
+Replacing human review
+
+3. User Personas
+3.1 SME Owner
+Needs quick, simple tender responses without hiring consultants.
+
+3.2 Procurement Manager
+Needs structured workflows, collaboration, and compliance tools.
+
+3.3 Tender Consultant
+Needs multi‑client management and fast drafting tools.
+
+3.4 Grant Applicant
+Needs matching and automated grant application drafting.
+
+4. Core Features
+4.1 Business Profile System
+Description
+A reusable profile that stores all business information required for tenders.
+
+Requirements
+Corporate details
+
+Industry classification
+
+Staff & CVs
+
+Past performance
+
+Compliance documents
+
+Policies & certifications
+
+Upload library
+
+Auto‑generated capability statements
+
+AI Components
+Profile Intelligence Engine
+
+Auto‑normalisation
+
+Auto‑tagging
+
+Missing‑info detection
+
+4.2 Tender & Grant Matching Engine
+Description
+Matches business profiles to relevant tenders and grants.
+
+Requirements
+Integrate with AusTender, state portals, grants databases
+
+Keyword + industry matching
+
+Capability vector matching
+
+Match scoring
+
+Risk scoring
+
+Save & track opportunities
+
+AI Components
+Recommendation Engine
+
+4.3 Tender Document Parsing Engine
+Description
+Ingests and interprets tender documents.
+
+Requirements
+PDF, Word, Excel, ZIP support
+
+OCR for scanned documents
+
+Document classification
+
+Section extraction
+
+Table extraction
+
+Response form extraction
+
+AI Components
+Tender Document Parsing Engine
+
+4.4 Requirements Extraction Engine
+Description
+Extracts all requirements from tender documents.
+
+Requirements
+Mandatory conditions
+
+Minimum content requirements
+
+Evaluation criteria
+
+Technical requirements
+
+Submission format
+
+Contractual obligations
+
+AI Components
+Requirements Extraction Engine
+
+4.5 Compliance & Gap Analysis Engine
+Description
+Compares tender requirements against the business profile.
+
+Requirements
+Compliance scoring
+
+Gap detection
+
+Missing documents
+
+Risk flags
+
+Insurance & certification checks
+
+AI Components
+Compliance & Gap Analysis Engine
+
+4.6 Automated Response Generation Engine
+Description
+Generates a complete draft tender response.
+
+Requirements
+Executive summary
+
+Capability statement
+
+Methodology & delivery approach
+
+Risk management plan
+
+WHS & QA statements
+
+CV summaries
+
+Past performance mapping
+
+Auto‑populate response forms
+
+Export to Word/PDF
+
+AI Components
+Response Generation Engine
+
+4.7 Contract Risk Analysis Engine
+Description
+Analyses draft contract terms and identifies risks.
+
+Requirements
+Clause extraction
+
+Clause classification
+
+Risk scoring
+
+Highlight unusual clauses
+
+Suggest negotiation points
+
+AI Components
+Contract Risk Analysis Engine
+
+4.8 Compliance Checklist Generator
+Description
+Creates a personalised checklist for each tender.
+
+Requirements
+Missing documents
+
+Missing content
+
+Mandatory conditions
+
+Contract risks
+
+Submission format requirements
+
+5. System Architecture Requirements
+5.1 High‑Level Architecture
+Frontend (React/Next.js)
+
+Backend (Node.js/Express or NestJS)
+
+AI Layer (LLM + embeddings + vector DB)
+
+Document Processing Layer (OCR + parsing)
+
+Database (PostgreSQL)
+
+File Storage (S3 or equivalent)
+
+Authentication (Clerk/Auth0)
+
+Payments (Stripe)
+
+5.2 AI Architecture
+Embedding model for semantic search
+
+LLM for generation
+
+Fine‑tuned models for classification
+
+Vector database for tender + profile embeddings
+
+Prompt‑chaining for multi‑step workflows
+
+6. Data Models
+6.1 Business Profile Schema
+Corporate info
+
+Industry classification
+
+Staff
+
+CVs
+
+Past performance
+
+Policies
+
+Certifications
+
+Uploaded documents
+
+6.2 Tender Schema
+Tender metadata
+
+Documents
+
+Requirements
+
+Evaluation criteria
+
+Contract clauses
+
+6.3 Response Schema
+Draft responses
+
+Auto‑generated content blocks
+
+Version history
+
+7. User Workflows
+7.1 Onboarding
+Create account
+
+Build business profile
+
+Upload documents
+
+Select industries
+
+Start receiving tender matches
+
+7.2 Tender Response Workflow
+User selects tender
+
+AI parses documents
+
+AI extracts requirements
+
+AI performs compliance analysis
+
+AI generates draft response
+
+User edits
+
+Export to Word/PDF
+
+8. Pricing Model
+Free Tier
+Basic profile
+
+Basic tender matching
+
+5 tender views/month
+
+Basic compliance score
+
+Premium Tier
+Unlimited tender matching
+
+Full AI document scanning
+
+Full AI response generation
+
+Contract risk analysis
+
+Unlimited uploads
+
+Team collaboration
+
+Export tools
+
+9. Security & Compliance
+Data encryption (AES‑256, TLS 1.2+)
+
+Australian Government ISM alignment
+
+GDPR‑aligned consent
+
+No training on user data
+
+Audit logs
+
+Version history
+
+10. Success Metrics
+Business Metrics
+Conversion to premium
+
+Monthly active users
+
+Tender responses generated
+
+Time saved per tender
+
+AI Metrics
+Requirement extraction accuracy
+
+Compliance scoring accuracy
+
+Response quality rating
+
+Document parsing accuracy
