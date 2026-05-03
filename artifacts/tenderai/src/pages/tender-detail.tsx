@@ -154,7 +154,12 @@ function DocumentsPanel({ tenderId, docs }: { tenderId: number; docs: Doc[] }) {
     onError: (e) => toast({ title: "Upload failed", description: e.message, variant: "destructive" }),
   });
   const attach = useMutation({
-    mutationFn: (body: any) =>
+    mutationFn: (body: {
+      name: string;
+      contentType: string;
+      sizeBytes: number;
+      objectPath: string;
+    }) =>
       api(`/api/tenders/${tenderId}/documents`, {
         method: "POST",
         body: JSON.stringify(body),

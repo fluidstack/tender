@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, desc, sql } from "drizzle-orm";
 import {
   db,
   tenders,
@@ -476,18 +476,32 @@ router.get("/tenders/:id/checklist", async (req, res): Promise<void> => {
     detail?: string | null;
   }> = [];
 
+  const [docCountRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(tenderDocuments)
+    .where(
+      and(eq(tenderDocuments.tenderId, id), eq(tenderDocuments.parseStatus, "parsed")),
+    );
+  const parsedDocCount = docCountRow?.count ?? 0;
+  const [reqCountRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(requirements)
+    .where(eq(requirements.tenderId, id));
+  const reqCount = reqCountRow?.count ?? 0;
+
   items.push({
     id: "documents",
     category: "Setup",
     label: "Tender documents uploaded and parsed",
-    complete: true,
+    complete: parsedDocCount > 0,
+    detail: parsedDocCount > 0 ? `${parsedDocCount} document(s) parsed` : "No parsed documents",
   });
   items.push({
     id: "requirements",
     category: "Setup",
     label: "Requirements extracted",
-    complete: true,
-    detail: null,
+    complete: reqCount > 0,
+    detail: reqCount > 0 ? `${reqCount} requirement(s)` : "Run extraction",
   });
   items.push({
     id: "compliance",

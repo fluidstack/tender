@@ -212,6 +212,18 @@ router.post("/tenders/:id/documents", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Not found" });
     return;
   }
+  if (!parsed.data.objectPath.startsWith("/objects/")) {
+    res.status(400).json({ error: "Invalid object path" });
+    return;
+  }
+  const [claimed] = await db
+    .select({ id: tenderDocuments.id })
+    .from(tenderDocuments)
+    .where(eq(tenderDocuments.objectPath, parsed.data.objectPath));
+  if (claimed) {
+    res.status(409).json({ error: "Object already attached" });
+    return;
+  }
   const [doc] = await db
     .insert(tenderDocuments)
     .values({ ...parsed.data, tenderId: id, parseStatus: "parsing" })
