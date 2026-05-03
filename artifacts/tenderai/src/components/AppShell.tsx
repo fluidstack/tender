@@ -49,7 +49,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="mt-auto pt-4 flex items-center gap-2 px-2">
-          <UserButton afterSignOutUrl={import.meta.env.BASE_URL} />
+          <UserButton />
           <span className="text-xs text-muted-foreground">Account</span>
         </div>
       </aside>

@@ -1,0 +1,308 @@
+High-level architecture
+Source layer:
+
+AusTender OCDS API (Commonwealth contracts, OCDS JSON) 
+
+Historical/bulk CN exports from data.gov.au (backfill, bulk loads) 
+
+State portals (HTML/RSS; scrape/ingest where no API exists).
+
+Ingestion layer (workers):
+
+Scheduled jobs (per source) → fetch, normalise, dedupe.
+
+Core services:
+
+Tender Normalisation Service → maps each source into a unified schema.
+
+Search/Query API → what your apps and AI layer talk to.
+
+Storage:
+
+OLTP DB (PostgreSQL) for canonical tenders.
+
+Search index (OpenSearch/Meilisearch) for full‑text.
+
+Object storage for raw JSON snapshots.
+
+AI layer:
+
+Extraction pipelines (requirements, criteria, timelines, etc.).
+
+Embeddings store for semantic search over tenders.
+
+1. Source integration: AusTender OCDS API
+1.1 Discovery and endpoints
+From the AusTender OCDS API repo and docs: 
+
+Base: OCDS REST API (documented via SwaggerHub).
+
+Core endpoints (examples):
+
+Search by Contract Notice ID
+
+Search by Published Date range
+
+Search by Start Date range
+
+Search by End Date range
+
+Search by Last Modified Date range
+
+Strategy:
+
+Initial backfill:
+
+Iterate over Published Date from 2013-01-01 → today in daily/weekly windows.
+
+For each window, page through results until exhausted.
+
+Ongoing sync:
+
+Use Last Modified Date from last_sync_timestamp → now.
+
+Store last_sync_timestamp per source in a control table.
+
+1.2 Request/response conventions
+Date parameters: ISO 8601 intervals (e.g. 2024-01-01T00:00:00Z/2024-01-31T23:59:59Z). 
+
+Response: OCDS release/record objects with:
+
+tender, awards, contracts, parties, planning, etc. 
+
+1.3 Auth, limits, resilience
+Auth:
+
+If API key is required, store in env/secret manager; inject via header.
+
+Rate limiting:
+
+Central HTTP client with:
+
+Token bucket or fixed QPS per host.
+
+Exponential backoff on 429/5xx.
+
+Resilience:
+
+Idempotent ingestion keyed by Contract Notice ID.
+
+Dead‑letter queue for permanently failing payloads.
+
+2. Source integration: historical and bulk data
+2.1 Historical CN data (data.gov.au)
+Use historical contract notice datasets (1999–2019) for backfill. 
+
+Load via batch jobs:
+
+Download CSV/ZIP.
+
+Map fields to your unified schema.
+
+Mark records as source="austender_historical".
+
+2.2 Strategy
+Order of operations:
+
+Load historical CN exports (1999–2012).
+
+Load OCDS API data (2013+).
+
+Resolve overlaps by preferring OCDS as canonical when IDs collide.
+
+3. Source integration: states & territories
+Most states don’t expose public tender APIs; they rely on web portals.
+
+Plan per jurisdiction:
+
+Discovery:
+
+Identify RSS feeds or CSV exports where available.
+
+Scraping:
+
+Build per‑site scrapers (headless or HTTP+HTML parsing) for:
+
+Tender ID, title, description, category, agency, location, value, open/close dates, documents URLs.
+
+Normalisation:
+
+Map to unified schema with jurisdiction = "NSW" | "VIC" | ....
+
+Change detection:
+
+Use:
+
+Last‑seen hash of tender page content, or
+
+“Last updated” fields where present.
+
+Ethics & load:
+
+Respect robots.txt, throttle requests, and cache aggressively.
+
+(If you later adopt a third‑party aggregator, you can swap this layer behind the same normalisation interface.)
+
+4. Unified tender schema
+Design a source‑agnostic schema that still preserves OCDS richness.
+
+Core tables:
+
+tenders
+
+id (internal UUID)
+
+source_system (e.g. austender_ocds, nsw_etender)
+
+source_tender_id
+
+ocid (if OCDS)
+
+title
+
+description (long text)
+
+status (open, closed, awarded, etc.)
+
+procurement_method
+
+jurisdiction (Commonwealth, NSW, VIC, …)
+
+category_code (UNSPSC or local)
+
+estimated_value_min, estimated_value_max, currency
+
+published_at, closing_at, awarded_at
+
+buyer_org_id (FK → organisations)
+
+organisations
+
+id, name, role (buyer, supplier, both)
+
+abn (if available), country, state.
+
+awards
+
+id, tender_id
+
+value, currency
+
+supplier_org_id
+
+award_date.
+
+documents
+
+id, tender_id
+
+type (RFT, Addendum, Specification, etc.)
+
+url, filename, mime_type.
+
+ai_extractions
+
+id, tender_id
+
+requirements_json
+
+evaluation_criteria_json
+
+mandatory_conditions_json
+
+risks_json
+
+last_extracted_at.
+
+5. Ingestion workflows
+5.1 Scheduler
+Daily jobs:
+
+AusTender OCDS incremental sync (Last Modified).
+
+State scrapers (per jurisdiction).
+
+Weekly jobs:
+
+Re‑sync last 7 days to catch late corrections.
+
+Re‑run AI extraction for tenders with updated content.
+
+5.2 Ingestion pipeline steps
+Fetch:
+
+Call source API or scraper; store raw payload in object storage with metadata.
+
+Validate:
+
+JSON schema validation for OCDS; basic sanity checks for scraped data.
+
+Transform:
+
+Map to unified schema; normalise dates, currencies, categories.
+
+Upsert:
+
+Upsert into DB by (source_system, source_tender_id).
+
+Index:
+
+Push/update document in search index.
+
+Trigger AI:
+
+Queue message for AI extraction worker.
+
+6. AI extraction and search
+6.1 Extraction
+For each new/updated tender:
+
+Inputs: title, description, documents (where accessible).
+
+Outputs (stored in ai_extractions):
+
+Requirements: bullet list + structured JSON.
+
+Evaluation criteria: weights, qualitative descriptions.
+
+Mandatory conditions: compliance, certifications, insurances.
+
+Timeline: milestones, key dates.
+
+Fit tags: industries, capabilities, risk level.
+
+6.2 Search API (your public/internal API)
+Expose a clean API for your apps:
+
+GET /tenders
+
+Filters: jurisdiction, status, category, min_value, max_value, closing_before, closing_after, search (full‑text).
+
+GET /tenders/{id}
+
+Returns tender + awards + AI extractions.
+
+GET /organisations/{id}/tenders
+
+For supplier/buyer profiling.
+
+GET /analytics/summary
+
+Aggregates by category, agency, jurisdiction.
+
+7. Cross‑cutting concerns
+Observability:
+
+Structured logs per source and job.
+
+Metrics: success/failure counts, latency, records ingested, AI extraction time.
+
+Config & secrets:
+
+Per‑environment config for endpoints, keys, rate limits.
+
+Compliance:
+
+Respect any usage terms on AusTender and state portals.
+
+Provide attribution where required.

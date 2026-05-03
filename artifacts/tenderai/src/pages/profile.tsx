@@ -65,6 +65,8 @@ export default function ProfilePage() {
 
   if (!profile) return <div>Loading…</div>;
 
+  const setNum = (k: "yearsTrading" | "employeeCount", v: string) =>
+    setForm((f) => ({ ...f, [k]: v === "" ? null : Number(v) }));
   const setField = (k: keyof Profile, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
@@ -111,8 +113,8 @@ export default function ProfilePage() {
           <Field label="Email"><Input value={form.email ?? ""} onChange={(e) => setField("email", e.target.value)} /></Field>
           <Field label="Phone"><Input value={form.phone ?? ""} onChange={(e) => setField("phone", e.target.value)} /></Field>
           <Field label="Address"><Input value={form.address ?? ""} onChange={(e) => setField("address", e.target.value)} /></Field>
-          <Field label="Years trading"><Input type="number" value={form.yearsTrading ?? ""} onChange={(e) => setField("yearsTrading", e.target.value)} /></Field>
-          <Field label="Employee count"><Input type="number" value={form.employeeCount ?? ""} onChange={(e) => setField("employeeCount", e.target.value)} /></Field>
+          <Field label="Years trading"><Input type="number" value={form.yearsTrading ?? ""} onChange={(e) => setNum("yearsTrading", e.target.value)} /></Field>
+          <Field label="Employee count"><Input type="number" value={form.employeeCount ?? ""} onChange={(e) => setNum("employeeCount", e.target.value)} /></Field>
           <Field label="Annual revenue"><Input value={form.annualRevenue ?? ""} onChange={(e) => setField("annualRevenue", e.target.value)} /></Field>
         </CardContent>
       </Card>
@@ -145,7 +147,7 @@ export default function ProfilePage() {
           { key: "role", label: "Role" },
           { key: "bio", label: "Bio", multiline: true },
         ]}
-        render={(s) => (
+        render={(s: { id: number; name: string; role: string; bio: string | null }) => (
           <>
             <div className="font-medium">{s.name} <span className="text-muted-foreground font-normal">— {s.role}</span></div>
             {s.bio && <div className="text-sm text-muted-foreground">{s.bio}</div>}
@@ -163,7 +165,7 @@ export default function ProfilePage() {
           { key: "sector", label: "Sector" },
           { key: "outcomes", label: "Outcomes", multiline: true },
         ]}
-        render={(p) => (
+        render={(p: { id: number; projectName: string; client: string | null; outcomes: string | null }) => (
           <>
             <div className="font-medium">{p.projectName} {p.client && <span className="text-muted-foreground font-normal">— {p.client}</span>}</div>
             {p.outcomes && <div className="text-sm text-muted-foreground">{p.outcomes}</div>}
@@ -179,7 +181,7 @@ export default function ProfilePage() {
           { key: "name", label: "Name" },
           { key: "issuer", label: "Issuer" },
         ]}
-        render={(c) => (
+        render={(c: { id: number; name: string; issuer: string | null }) => (
           <>
             <Badge variant="secondary">{c.name}</Badge>{" "}
             {c.issuer && <span className="text-sm text-muted-foreground">{c.issuer}</span>}

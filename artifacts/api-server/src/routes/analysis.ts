@@ -395,6 +395,62 @@ router.post("/tenders/:id/draft", async (req, res): Promise<void> => {
   res.json(row);
 });
 
+router.post(
+  "/tenders/:id/draft/sections/:key/regenerate",
+  async (req, res): Promise<void> => {
+    const userId = getUserId(req);
+    const id = Number(req.params.id);
+    const sectionKey = req.params.key;
+    const t = await ownTender(userId, id);
+    if (!t) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const [draft] = await db
+      .select()
+      .from(tenderDrafts)
+      .where(eq(tenderDrafts.tenderId, id));
+    if (!draft) {
+      res.status(404).json({ error: "No draft" });
+      return;
+    }
+    const sec = DEFAULT_SECTIONS.find((s) => s.key === sectionKey);
+    if (!sec) {
+      res.status(404).json({ error: "Unknown section" });
+      return;
+    }
+    const profile = await getOrCreateProfile(userId);
+    const reqs = await db
+      .select()
+      .from(requirements)
+      .where(eq(requirements.tenderId, id));
+    const profileBlob = JSON.stringify({
+      company: profile.companyName,
+      industry: profile.industry,
+      capabilities: profile.capabilities,
+      capabilityStatement: profile.capabilityStatement,
+    });
+    const content = await aiText({
+      system:
+        "You are a professional bid writer. Write a concise, persuasive section for a tender response. 2-4 paragraphs, no markdown.",
+      user: `Section: ${sec.title}\n\nTender: ${t.title} — ${t.agency}\nSummary: ${t.summary ?? ""}\n\nBusiness profile: ${profileBlob}\n\nKey requirements:\n${reqs
+        .slice(0, 12)
+        .map((r) => `- ${r.text}`)
+        .join("\n") || "(none extracted yet)"}`,
+      fallback: `${sec.title} content pending — please add details.`,
+    });
+    const nextSections = draft.sections.map((s) =>
+      s.key === sectionKey ? { ...s, content } : s,
+    );
+    const [row] = await db
+      .update(tenderDrafts)
+      .set({ sections: nextSections, updatedAt: new Date() })
+      .where(eq(tenderDrafts.tenderId, id))
+      .returning();
+    res.json(row);
+  },
+);
+
 router.patch("/tenders/:id/draft", async (req, res): Promise<void> => {
   const userId = getUserId(req);
   const id = Number(req.params.id);

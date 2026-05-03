@@ -21,6 +21,12 @@ import {
   AlertTriangle,
   FileText,
   Download,
+  Bookmark,
+  BookmarkCheck,
+  ListChecks,
+  RefreshCw,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 
 interface Doc {
@@ -56,6 +62,7 @@ interface Tender {
   title: string;
   agency: string;
   status: string;
+  saved: boolean;
   summary: string | null;
   category: string | null;
   closeDate: string | null;
@@ -67,11 +74,30 @@ interface Tender {
   risks: Risk | null;
   draft: Draft | null;
 }
+interface ChecklistItem {
+  id: string;
+  category: string;
+  label: string;
+  complete: boolean;
+  detail?: string | null;
+}
 
 export default function TenderDetail({ id }: { id: number }) {
   const { data: tender, isLoading } = useQuery<Tender>({
     queryKey: ["tender", id],
     queryFn: () => api(`/api/tenders/${id}`),
+  });
+
+  const toggleSave = useMutation({
+    mutationFn: () =>
+      api(`/api/tenders/${id}/save`, {
+        method: "PATCH",
+        body: JSON.stringify({ saved: !tender?.saved }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tender", id] });
+      queryClient.invalidateQueries({ queryKey: ["tenders"] });
+    },
   });
 
   if (isLoading || !tender) return <p>Loading…</p>;
@@ -95,12 +121,27 @@ export default function TenderDetail({ id }: { id: number }) {
             {tender.closeDate ? ` · closes ${tender.closeDate}` : ""}
           </p>
         </div>
-        {tender.matchScore != null && (
-          <Card className="px-5 py-3 text-center min-w-32">
-            <div className="text-3xl font-bold">{tender.matchScore}%</div>
-            <div className="text-xs text-muted-foreground">match</div>
-          </Card>
-        )}
+        <div className="flex items-center gap-3">
+          <Button
+            variant={tender.saved ? "default" : "outline"}
+            size="sm"
+            onClick={() => toggleSave.mutate()}
+            disabled={toggleSave.isPending}
+            data-testid="button-save-tender"
+          >
+            {tender.saved ? (
+              <><BookmarkCheck className="h-4 w-4 mr-2" /> Saved</>
+            ) : (
+              <><Bookmark className="h-4 w-4 mr-2" /> Save</>
+            )}
+          </Button>
+          {tender.matchScore != null && (
+            <Card className="px-5 py-3 text-center min-w-32">
+              <div className="text-3xl font-bold">{tender.matchScore}%</div>
+              <div className="text-xs text-muted-foreground">match</div>
+            </Card>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="overview">
@@ -111,6 +152,7 @@ export default function TenderDetail({ id }: { id: number }) {
           <TabsTrigger value="compliance" data-testid="tab-compliance">Compliance</TabsTrigger>
           <TabsTrigger value="risks" data-testid="tab-risks">Risks</TabsTrigger>
           <TabsTrigger value="draft" data-testid="tab-draft">Draft</TabsTrigger>
+          <TabsTrigger value="checklist" data-testid="tab-checklist">Checklist</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-4">
@@ -143,6 +185,10 @@ export default function TenderDetail({ id }: { id: number }) {
 
         <TabsContent value="draft" className="space-y-4 mt-4">
           <DraftPanel tenderId={id} draft={tender.draft} />
+        </TabsContent>
+
+        <TabsContent value="checklist" className="space-y-4 mt-4">
+          <ChecklistPanel tenderId={id} />
         </TabsContent>
       </Tabs>
     </div>
@@ -353,7 +399,55 @@ function RisksPanel({ tenderId, risk, hasDocs }: { tenderId: number; risk: Risk 
   );
 }
 
+function ChecklistPanel({ tenderId }: { tenderId: number }) {
+  const { data, isLoading } = useQuery<{ items: ChecklistItem[] }>({
+    queryKey: ["tender-checklist", tenderId],
+    queryFn: () => api(`/api/tenders/${tenderId}/checklist`),
+  });
+  if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  const items = data?.items ?? [];
+  const done = items.filter((i) => i.complete).length;
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <ListChecks className="h-4 w-4" /> Submission checklist ({done}/{items.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {items.length === 0 && (
+          <p className="text-sm text-muted-foreground">No checklist items yet.</p>
+        )}
+        {items.map((it) => (
+          <div key={it.id} className="flex items-start gap-3 py-1" data-testid={`checklist-${it.id}`}>
+            {it.complete ? (
+              <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
+            ) : (
+              <Circle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+            )}
+            <div className="flex-1">
+              <div className="text-sm font-medium">{it.label}</div>
+              {it.detail && <div className="text-xs text-muted-foreground">{it.detail}</div>}
+            </div>
+            <Badge variant="outline" className="text-xs">{it.category}</Badge>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 function DraftPanel({ tenderId, draft }: { tenderId: number; draft: Draft | null }) {
+  const [local, setLocal] = useState<DraftSection[] | null>(null);
+  const regenSection = useMutation({
+    mutationFn: (key: string) =>
+      api(`/api/tenders/${tenderId}/draft/sections/${key}/regenerate`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tender", tenderId] });
+      setLocal(null);
+      toast({ title: "Section regenerated" });
+    },
+  });
   const generate = useMutation({
     mutationFn: () => api(`/api/tenders/${tenderId}/draft`, { method: "POST" }),
     onSuccess: () => {
@@ -369,7 +463,6 @@ function DraftPanel({ tenderId, draft }: { tenderId: number; draft: Draft | null
       }),
     onSuccess: () => toast({ title: "Draft saved" }),
   });
-  const [local, setLocal] = useState<DraftSection[] | null>(null);
   const sections = local ?? draft?.sections ?? [];
 
   return (
@@ -404,7 +497,18 @@ function DraftPanel({ tenderId, draft }: { tenderId: number; draft: Draft | null
       )}
       {sections.map((s, i) => (
         <Card key={s.key}>
-          <CardHeader className="pb-2"><CardTitle className="text-base">{s.title}</CardTitle></CardHeader>
+          <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base">{s.title}</CardTitle>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => regenSection.mutate(s.key)}
+              disabled={regenSection.isPending}
+              data-testid={`button-regen-${s.key}`}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Regenerate
+            </Button>
+          </CardHeader>
           <CardContent>
             <Textarea
               rows={8}
