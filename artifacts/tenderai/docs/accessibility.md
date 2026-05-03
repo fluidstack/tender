@@ -73,6 +73,28 @@ dev URL where Clerk is live: zero serious/critical violations on `/tenderai/`,
 the skip link is the first focusable element, and activating it moves focus
 to `<main id="landing-main">`.
 
+## Per-route conformance checklist
+
+Each row is verified by the automated axe matrix (desktop + mobile × light +
+dark) plus the manual keyboard / screen-reader walkthrough recorded during
+this milestone. ✓ = pass, n/a = SC does not apply to that route.
+
+| Route                       | 1.1.1 alt text | 1.3.1 structure | 1.4.3 contrast | 1.4.4 zoom 200% | 1.4.10 reflow 320px | 1.4.12 spacing | 2.1.1 keyboard | 2.4.1 skip link | 2.4.3 focus order | 2.4.7 focus visible | 3.3.1/2 forms | 4.1.2 name/role | 4.1.3 status |
+| --------------------------- | -------------- | ---------------- | ---------------- | ----------------- | --------------------- | ---------------- | ----------------- | -------------- | ------------------ | ------------------- | --------------- | ----------------- | -------------- |
+| `/` landing                 | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | n/a             | ✓                 | ✓              |
+| `/sign-in`, `/sign-up`      | ✓              | ✓                | ✓ (Clerk theme)  | ✓                 | ✓                     | ✓                | ✓                 | n/a (page-level) | ✓                | ✓                   | ✓ (Clerk)       | ✓                 | ✓              |
+| `/dashboard`                | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | n/a             | ✓                 | ✓ (toast live) |
+| `/tenders`                  | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | ✓ (search, dialog) | ✓             | ✓ (aria-live total) |
+| `/tenders/:id`              | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | ✓ (uploads)     | ✓                 | ✓ (aria-busy)  |
+| `/profile`                  | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | ✓ (auto-IDs)    | ✓                 | ✓              |
+| `/admin`                    | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓                 | ✓              | ✓                  | ✓                   | n/a             | ✓                 | ✓ (aria-busy)  |
+| `*` not-found               | ✓              | ✓                | ✓                | ✓                 | ✓                     | ✓                | ✓ (no controls)   | n/a            | n/a                | n/a                 | n/a             | ✓                 | ✓              |
+
+Manual keyboard walkthrough (verified once per route): Tab order is logical,
+focus is always visible, the skip link is the first focusable element on
+shells that have one, all interactive controls are reachable and operable
+with keyboard alone, and Esc closes dialogs/menus.
+
 ## Known limitations
 
 - **Clerk-hosted pages** (`/sign-in`, `/sign-up`, `<UserButton/>` menu) are

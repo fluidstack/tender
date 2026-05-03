@@ -327,10 +327,20 @@ function CreateTenderDialog() {
               required
               aria-required="true"
               aria-invalid={titleMissing || undefined}
+              aria-describedby={titleMissing ? `${titleId}-error` : undefined}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               data-testid="input-title"
             />
+            {titleMissing && (
+              <p
+                id={`${titleId}-error`}
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                Title is required.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={agencyId}>
@@ -342,10 +352,20 @@ function CreateTenderDialog() {
               required
               aria-required="true"
               aria-invalid={agencyMissing || undefined}
+              aria-describedby={agencyMissing ? `${agencyId}-error` : undefined}
               value={form.agency}
               onChange={(e) => setForm({ ...form, agency: e.target.value })}
               data-testid="input-agency"
             />
+            {agencyMissing && (
+              <p
+                id={`${agencyId}-error`}
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                Agency is required.
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor={categoryId}>Category</Label>
