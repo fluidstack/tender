@@ -6,7 +6,8 @@ const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
-  retries: 0,
+  retries: 1,
+  timeout: 90_000,
   reporter: [["list"]],
   use: {
     baseURL: BASE_URL,

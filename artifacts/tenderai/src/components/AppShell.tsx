@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { UserButton as RealUserButton } from "@clerk/react";
 
 function isA11yBypass(): boolean {
+  if (!import.meta.env.DEV) return false;
   if (typeof window === "undefined") return false;
   return (window as unknown as { __E2E_A11Y__?: boolean }).__E2E_A11Y__ === true;
 }
@@ -123,7 +124,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         TenderAI — see the{" "}
         <a
-          href="https://github.com/replit"
+          href="/docs/accessibility.md"
           className="underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
         >
           accessibility statement

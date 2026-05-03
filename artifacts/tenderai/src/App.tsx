@@ -105,6 +105,7 @@ function Routes() {
 }
 
 function isA11yBypass(): boolean {
+  if (!import.meta.env.DEV) return false;
   if (typeof window === "undefined") return false;
   return (window as unknown as { __E2E_A11Y__?: boolean }).__E2E_A11Y__ === true;
 }
