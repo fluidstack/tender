@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "TenderAI"
+version = "1.0.0"
+id = "artifacts/tenderai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20547
+
+[services.development]
+run = "pnpm --filter @workspace/tenderai run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/tenderai", "run", "build" ]
+publicDir = "artifacts/tenderai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20547"
+BASE_PATH = "/"

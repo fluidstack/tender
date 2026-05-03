@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: TenderAI API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: profile
+  - name: tenders
+  - name: documents
+  - name: requirements
+  - name: compliance
+  - name: risks
+  - name: response
+  - name: dashboard
+  - name: Storage
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +30,1011 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Aggregate dashboard counts and recent activity
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /profile:
+    get:
+      operationId: getBusinessProfile
+      tags: [profile]
+      summary: Get the current user's business profile
+      responses:
+        "200":
+          description: Profile (created on demand)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessProfile"
+    patch:
+      operationId: updateBusinessProfile
+      tags: [profile]
+      summary: Update business profile fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBusinessProfileInput"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessProfile"
+
+  /profile/completeness:
+    get:
+      operationId: getProfileCompleteness
+      tags: [profile]
+      summary: Profile completeness scoring with missing fields
+      responses:
+        "200":
+          description: Completeness report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileCompleteness"
+
+  /profile/staff:
+    get:
+      operationId: listStaff
+      tags: [profile]
+      summary: List staff/CVs attached to the profile
+      responses:
+        "200":
+          description: List of staff
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffMember"
+    post:
+      operationId: createStaff
+      tags: [profile]
+      summary: Add a staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStaffInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+  /profile/staff/{id}:
+    delete:
+      operationId: deleteStaff
+      tags: [profile]
+      summary: Delete a staff member
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204":
+          description: Deleted
+
+  /profile/past-performance:
+    get:
+      operationId: listPastPerformance
+      tags: [profile]
+      summary: List past performance projects
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PastPerformance"
+    post:
+      operationId: createPastPerformance
+      tags: [profile]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePastPerformanceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PastPerformance"
+  /profile/past-performance/{id}:
+    delete:
+      operationId: deletePastPerformance
+      tags: [profile]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204":
+          description: Deleted
+
+  /profile/certifications:
+    get:
+      operationId: listCertifications
+      tags: [profile]
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Certification"
+    post:
+      operationId: createCertification
+      tags: [profile]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCertificationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Certification"
+  /profile/certifications/{id}:
+    delete:
+      operationId: deleteCertification
+      tags: [profile]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204":
+          description: Deleted
+
+  /tenders:
+    get:
+      operationId: listTenders
+      tags: [tenders]
+      summary: List all tenders, with match scores when profile available
+      parameters:
+        - { name: search, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+      responses:
+        "200":
+          description: List of tenders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tender"
+    post:
+      operationId: createTender
+      tags: [tenders]
+      summary: Create a tender
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenderInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tender"
+
+  /tenders/top-matches:
+    get:
+      operationId: listTopTenderMatches
+      tags: [tenders]
+      summary: Top matching tenders for the user's business profile
+      responses:
+        "200":
+          description: List of top matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tender"
+
+  /tenders/{id}:
+    get:
+      operationId: getTender
+      tags: [tenders]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Tender detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+    patch:
+      operationId: updateTender
+      tags: [tenders]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenderInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tender"
+    delete:
+      operationId: deleteTender
+      tags: [tenders]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204":
+          description: Deleted
+
+  /tenders/{id}/save:
+    patch:
+      operationId: toggleSavedTender
+      tags: [tenders]
+      summary: Toggle saved/tracked status on a tender
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Updated tender
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tender"
+
+  /tenders/{id}/documents:
+    get:
+      operationId: listTenderDocuments
+      tags: [documents]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Documents on this tender
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenderDocument"
+    post:
+      operationId: attachTenderDocument
+      tags: [documents]
+      summary: Attach an uploaded document and trigger parsing
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttachTenderDocumentInput"
+      responses:
+        "201":
+          description: Created document record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderDocument"
+
+  /tenders/{id}/documents/{documentId}:
+    delete:
+      operationId: deleteTenderDocument
+      tags: [documents]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: documentId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204":
+          description: Deleted
+
+  /tenders/{id}/extract-requirements:
+    post:
+      operationId: extractTenderRequirements
+      tags: [requirements]
+      summary: Run AI requirements extraction across all parsed documents
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Extracted requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Requirement"
+
+  /tenders/{id}/requirements:
+    get:
+      operationId: listTenderRequirements
+      tags: [requirements]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: List of requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Requirement"
+
+  /tenders/{id}/compliance:
+    get:
+      operationId: getTenderCompliance
+      tags: [compliance]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Compliance report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReport"
+    post:
+      operationId: runTenderCompliance
+      tags: [compliance]
+      summary: Run AI compliance & gap analysis vs business profile
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Compliance report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceReport"
+
+  /tenders/{id}/risks:
+    get:
+      operationId: getTenderRisks
+      tags: [risks]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Risk report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReport"
+    post:
+      operationId: runTenderRisks
+      tags: [risks]
+      summary: Run AI contract risk analysis on parsed documents
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Risk report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskReport"
+
+  /tenders/{id}/draft:
+    get:
+      operationId: getTenderDraft
+      tags: [response]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Current draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderDraft"
+    post:
+      operationId: generateTenderDraft
+      tags: [response]
+      summary: Generate AI draft response across all sections
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Generated draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderDraft"
+    patch:
+      operationId: updateTenderDraft
+      tags: [response]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenderDraftInput"
+      responses:
+        "200":
+          description: Updated draft
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderDraft"
+
+  /tenders/{id}/draft/export:
+    get:
+      operationId: exportTenderDraft
+      tags: [response]
+      summary: Export draft as docx or pdf
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - name: format
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Binary document
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /tenders/{id}/checklist:
+    get:
+      operationId: getTenderChecklist
+      tags: [compliance]
+      summary: Submission checklist combining gaps, risks, and requirements
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Checklist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChecklistItem"
+
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for file upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/public-objects/{filePath}:
+    get:
+      tags: [Storage]
+      operationId: getPublicObject
+      parameters:
+        - name: filePath
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Object content
+          content:
+            '*/*':
+              schema: { type: string, format: binary }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '500':
+          description: Failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Object content
+          content:
+            '*/*':
+              schema: { type: string, format: binary }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '500':
+          description: Failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
 
+    ErrorEnvelope:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1 }
+        size: { type: integer, minimum: 1 }
+        contentType: { type: string, minLength: 1 }
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string, format: uri }
+        objectPath: { type: string }
+        metadata:
+          $ref: '#/components/schemas/UploadUrlRequest'
+
+    BusinessProfile:
+      type: object
+      required:
+        - id
+        - companyName
+        - completeness
+        - createdAt
+        - updatedAt
+      properties:
+        id: { type: integer }
+        companyName: { type: string }
+        legalName: { type: ["string", "null"] }
+        abn: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        industry: { type: ["string", "null"] }
+        capabilities: { type: ["string", "null"] }
+        capabilityStatement: { type: ["string", "null"] }
+        yearsTrading: { type: ["integer", "null"] }
+        employeeCount: { type: ["integer", "null"] }
+        annualRevenue: { type: ["string", "null"] }
+        insuranceDetails: { type: ["string", "null"] }
+        wHSStatement: { type: ["string", "null"] }
+        qualityStatement: { type: ["string", "null"] }
+        diversityStatement: { type: ["string", "null"] }
+        sustainabilityStatement: { type: ["string", "null"] }
+        completeness: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UpdateBusinessProfileInput:
+      type: object
+      properties:
+        companyName: { type: string }
+        legalName: { type: ["string", "null"] }
+        abn: { type: ["string", "null"] }
+        website: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
+        phone: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        industry: { type: ["string", "null"] }
+        capabilities: { type: ["string", "null"] }
+        capabilityStatement: { type: ["string", "null"] }
+        yearsTrading: { type: ["integer", "null"] }
+        employeeCount: { type: ["integer", "null"] }
+        annualRevenue: { type: ["string", "null"] }
+        insuranceDetails: { type: ["string", "null"] }
+        wHSStatement: { type: ["string", "null"] }
+        qualityStatement: { type: ["string", "null"] }
+        diversityStatement: { type: ["string", "null"] }
+        sustainabilityStatement: { type: ["string", "null"] }
+
+    ProfileCompleteness:
+      type: object
+      required: [score, completedFields, totalFields, missing, sections]
+      properties:
+        score: { type: integer, description: "0-100" }
+        completedFields: { type: integer }
+        totalFields: { type: integer }
+        missing:
+          type: array
+          items: { type: string }
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProfileSectionStatus"
+
+    ProfileSectionStatus:
+      type: object
+      required: [name, score, missing]
+      properties:
+        name: { type: string }
+        score: { type: integer }
+        missing:
+          type: array
+          items: { type: string }
+
+    StaffMember:
+      type: object
+      required: [id, name, role, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        role: { type: string }
+        bio: { type: ["string", "null"] }
+        yearsExperience: { type: ["integer", "null"] }
+        qualifications: { type: ["string", "null"] }
+        cvObjectPath: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    CreateStaffInput:
+      type: object
+      required: [name, role]
+      properties:
+        name: { type: string }
+        role: { type: string }
+        bio: { type: ["string", "null"] }
+        yearsExperience: { type: ["integer", "null"] }
+        qualifications: { type: ["string", "null"] }
+        cvObjectPath: { type: ["string", "null"] }
+
+    PastPerformance:
+      type: object
+      required: [id, projectName, client, createdAt]
+      properties:
+        id: { type: integer }
+        projectName: { type: string }
+        client: { type: string }
+        sector: { type: ["string", "null"] }
+        value: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        outcomes: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    CreatePastPerformanceInput:
+      type: object
+      required: [projectName, client]
+      properties:
+        projectName: { type: string }
+        client: { type: string }
+        sector: { type: ["string", "null"] }
+        value: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
+        outcomes: { type: ["string", "null"] }
+        description: { type: ["string", "null"] }
+
+    Certification:
+      type: object
+      required: [id, name, issuer, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        issuer: { type: string }
+        identifier: { type: ["string", "null"] }
+        expiresOn: { type: ["string", "null"] }
+        documentObjectPath: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    CreateCertificationInput:
+      type: object
+      required: [name, issuer]
+      properties:
+        name: { type: string }
+        issuer: { type: string }
+        identifier: { type: ["string", "null"] }
+        expiresOn: { type: ["string", "null"] }
+        documentObjectPath: { type: ["string", "null"] }
+
+    Tender:
+      type: object
+      required: [id, title, agency, status, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        agency: { type: string }
+        reference: { type: ["string", "null"] }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        summary: { type: ["string", "null"] }
+        budget: { type: ["string", "null"] }
+        closeDate: { type: ["string", "null"] }
+        publishedDate: { type: ["string", "null"] }
+        status: { type: string, description: "open | closed | drafting | submitted" }
+        saved: { type: boolean }
+        matchScore: { type: ["integer", "null"], description: "0-100 vs current profile" }
+        matchRationale: { type: ["string", "null"] }
+        riskScore: { type: ["integer", "null"] }
+        complianceScore: { type: ["integer", "null"] }
+        documentCount: { type: integer }
+        requirementCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+
+    TenderDetail:
+      allOf:
+        - $ref: "#/components/schemas/Tender"
+        - type: object
+          properties:
+            documents:
+              type: array
+              items: { $ref: "#/components/schemas/TenderDocument" }
+            requirements:
+              type: array
+              items: { $ref: "#/components/schemas/Requirement" }
+            compliance:
+              oneOf:
+                - $ref: "#/components/schemas/ComplianceReport"
+                - type: "null"
+            risks:
+              oneOf:
+                - $ref: "#/components/schemas/RiskReport"
+                - type: "null"
+            draft:
+              oneOf:
+                - $ref: "#/components/schemas/TenderDraft"
+                - type: "null"
+
+    CreateTenderInput:
+      type: object
+      required: [title, agency]
+      properties:
+        title: { type: string }
+        agency: { type: string }
+        reference: { type: ["string", "null"] }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        summary: { type: ["string", "null"] }
+        budget: { type: ["string", "null"] }
+        closeDate: { type: ["string", "null"] }
+        publishedDate: { type: ["string", "null"] }
+    UpdateTenderInput:
+      type: object
+      properties:
+        title: { type: string }
+        agency: { type: string }
+        reference: { type: ["string", "null"] }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        summary: { type: ["string", "null"] }
+        budget: { type: ["string", "null"] }
+        closeDate: { type: ["string", "null"] }
+        publishedDate: { type: ["string", "null"] }
+        status: { type: string }
+
+    TenderDocument:
+      type: object
+      required: [id, tenderId, name, contentType, sizeBytes, objectPath, parseStatus, createdAt]
+      properties:
+        id: { type: integer }
+        tenderId: { type: integer }
+        name: { type: string }
+        contentType: { type: string }
+        sizeBytes: { type: integer }
+        objectPath: { type: string }
+        parseStatus: { type: string, description: "pending | parsing | parsed | failed" }
+        parseError: { type: ["string", "null"] }
+        extractedText: { type: ["string", "null"] }
+        pageCount: { type: ["integer", "null"] }
+        createdAt: { type: string, format: date-time }
+    AttachTenderDocumentInput:
+      type: object
+      required: [name, contentType, sizeBytes, objectPath]
+      properties:
+        name: { type: string }
+        contentType: { type: string }
+        sizeBytes: { type: integer }
+        objectPath: { type: string }
+
+    Requirement:
+      type: object
+      required: [id, tenderId, category, text, mandatory, createdAt]
+      properties:
+        id: { type: integer }
+        tenderId: { type: integer }
+        category: { type: string, description: "mandatory | technical | evaluation | submission | contractual | other" }
+        text: { type: string }
+        section: { type: ["string", "null"] }
+        mandatory: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    ComplianceReport:
+      type: object
+      required: [id, tenderId, score, gaps, items, generatedAt]
+      properties:
+        id: { type: integer }
+        tenderId: { type: integer }
+        score: { type: integer, description: "0-100" }
+        summary: { type: ["string", "null"] }
+        gaps:
+          type: array
+          items: { type: string }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComplianceItem"
+        generatedAt: { type: string, format: date-time }
+    ComplianceItem:
+      type: object
+      required: [requirement, status, evidence]
+      properties:
+        requirement: { type: string }
+        status: { type: string, description: "met | partial | gap" }
+        evidence: { type: string }
+        recommendation: { type: ["string", "null"] }
+
+    RiskReport:
+      type: object
+      required: [id, tenderId, overallRisk, items, generatedAt]
+      properties:
+        id: { type: integer }
+        tenderId: { type: integer }
+        overallRisk: { type: string, description: "low | medium | high" }
+        summary: { type: ["string", "null"] }
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskItem"
+        generatedAt: { type: string, format: date-time }
+    RiskItem:
+      type: object
+      required: [clause, category, severity, rationale]
+      properties:
+        clause: { type: string }
+        category: { type: string }
+        severity: { type: string, description: "low | medium | high" }
+        rationale: { type: string }
+        suggestion: { type: ["string", "null"] }
+
+    TenderDraft:
+      type: object
+      required: [id, tenderId, sections, generatedAt, updatedAt]
+      properties:
+        id: { type: integer }
+        tenderId: { type: integer }
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/DraftSection" }
+        generatedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    DraftSection:
+      type: object
+      required: [key, title, content]
+      properties:
+        key: { type: string }
+        title: { type: string }
+        content: { type: string }
+    UpdateTenderDraftInput:
+      type: object
+      required: [sections]
+      properties:
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/DraftSection" }
+
+    ChecklistItem:
+      type: object
+      required: [id, category, label, complete]
+      properties:
+        id: { type: string }
+        category: { type: string }
+        label: { type: string }
+        complete: { type: boolean }
+        detail: { type: ["string", "null"] }
+
+    DashboardSummary:
+      type: object
+      required:
+        - totalTenders
+        - openTenders
+        - savedTenders
+        - draftsInProgress
+        - submitted
+        - profileCompleteness
+        - averageMatchScore
+        - upcomingDeadlines
+        - recentActivity
+        - statusBreakdown
+      properties:
+        totalTenders: { type: integer }
+        openTenders: { type: integer }
+        savedTenders: { type: integer }
+        draftsInProgress: { type: integer }
+        submitted: { type: integer }
+        profileCompleteness: { type: integer }
+        averageMatchScore: { type: integer }
+        upcomingDeadlines:
+          type: array
+          items: { $ref: "#/components/schemas/Tender" }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/ActivityEntry" }
+        statusBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatusCount"
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status: { type: string }
+        count: { type: integer }
+    ActivityEntry:
+      type: object
+      required: [id, kind, label, createdAt]
+      properties:
+        id: { type: string }
+        kind: { type: string }
+        label: { type: string }
+        tenderId: { type: ["integer", "null"] }
+        tenderTitle: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }

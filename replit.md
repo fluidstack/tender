@@ -1,27 +1,26 @@
-# Workspace
+# TenderAI
 
-## Overview
-
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+AI-powered tender response platform for Australian businesses bidding on government tenders.
 
 ## Stack
+- **Frontend**: React + Vite (artifacts/tenderai), Wouter, TanStack Query, shadcn/ui, Tailwind v4
+- **API**: Express 5 (artifacts/api-server) on /api
+- **Auth**: Clerk (Replit-managed)
+- **DB**: Postgres + Drizzle (lib/db) — profile, tenders, documents, requirements, compliance, risks, drafts, activity tables
+- **AI**: Replit AI integrations OpenAI proxy (gpt-5.4) — `aiJson`/`aiText` helpers
+- **Storage**: Object storage for tender docs (PDF/DOCX, parsed via pdf-parse/mammoth)
+- **Export**: docx + pdfkit for response export
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+## Features (v1)
+- Business profile builder (company details, capabilities, staff, past performance, certs, compliance statements) with completeness score
+- Tender CRUD + 3 auto-seeded sample tenders on first dashboard load
+- Document upload, sync parse, requirements extraction (AI)
+- Compliance gap analysis (AI)
+- Contract risk analysis (AI)
+- 9-section AI-drafted response with editor + DOCX/PDF export
+- Dashboard with stats, deadlines, activity
 
-## Key Commands
-
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+## Notes
+- Sample tenders seed lazily per user via `seedSampleTendersForUser` on GET /api/dashboard/summary
+- Single-user v1 — no AusTender, no Stripe
+- Clerk uses publishableKeyFromHost(hostname, fallback) so dev test key works
