@@ -44,5 +44,28 @@ export default defineConfig({
         colorScheme: "dark",
       },
     },
+    {
+      // Explicit 375px CSS-width project to match the WCAG 2.1 1.4.10 reflow
+      // acceptance criterion (smallest common iPhone width). We deliberately
+      // use Chromium (not WebKit) here because the sandbox only ships Chromium.
+      name: "mobile-375-light",
+      use: {
+        ...devices["Desktop Chrome"],
+        colorScheme: "light",
+        viewport: { width: 375, height: 667 },
+        isMobile: false,
+        hasTouch: true,
+      },
+    },
+    {
+      name: "mobile-375-dark",
+      use: {
+        ...devices["Desktop Chrome"],
+        colorScheme: "dark",
+        viewport: { width: 375, height: 667 },
+        isMobile: false,
+        hasTouch: true,
+      },
+    },
   ],
 });
