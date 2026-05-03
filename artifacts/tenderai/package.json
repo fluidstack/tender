@@ -8,7 +8,7 @@
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:a11y": "LD_LIBRARY_PATH=/nix/store/24w3s75aa2lrvvxsybficn8y3zxd27kp-mesa-libgbm-25.1.0/lib:${LD_LIBRARY_PATH:-} playwright test"
+    "test:a11y": "node scripts/run-a11y.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

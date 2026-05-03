@@ -124,7 +124,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       >
         TenderAI — see the{" "}
         <a
-          href="/docs/accessibility.md"
+          href={`${import.meta.env.BASE_URL}docs/accessibility.md`}
           className="underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
         >
           accessibility statement
