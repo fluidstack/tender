@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetAuthMe } from "@workspace/api-client-react";
+import Footer from "@/components/Footer";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -147,19 +148,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
-      <footer
-        role="contentinfo"
-        className="border-t border-border px-4 sm:px-6 py-3 text-xs text-muted-foreground"
-      >
-        TenderAI — see the{" "}
-        <a
-          href={`${import.meta.env.BASE_URL}docs/accessibility.md`}
-          className="underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
-        >
-          accessibility statement
-        </a>
-        .
-      </footer>
+      <Footer />
     </div>
   );
 }

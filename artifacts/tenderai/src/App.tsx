@@ -16,6 +16,8 @@ import TendersList from "@/pages/tenders";
 import TenderDetail from "@/pages/tender-detail";
 import AdminPage from "@/pages/admin";
 import AppShell from "@/components/AppShell";
+import { TermsPage, PrivacyPage, AccessibilityPage } from "@/pages/legal";
+import Footer from "@/components/Footer";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "") || "";
 
@@ -42,8 +44,11 @@ function Protected({ children }: { children: React.ReactNode }) {
 
 function CenteredAuth({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
-      {children}
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex-1 w-full flex items-center justify-center p-4">
+        {children}
+      </div>
+      <Footer />
     </div>
   );
 }
@@ -52,6 +57,9 @@ function Routes() {
   return (
     <Switch>
       <Route path="/" component={Landing} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/privacy" component={PrivacyPage} />
+      <Route path="/accessibility" component={AccessibilityPage} />
       <Route path="/sign-in" nest>
         <CenteredAuth>
           <SignIn

@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { SignedIn, SignedOut } from "@/lib/clerk-helpers";
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/Footer";
 import {
   Sparkles,
   FileSearch,
@@ -122,9 +123,7 @@ export default function Landing() {
       </section>
       </main>
 
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        © TenderAI. Built for Australian businesses bidding on government work.
-      </footer>
+      <Footer />
       {/* basePath used for build-aware static imports */}
       {void basePath}
     </div>
