@@ -400,12 +400,12 @@ function RisksPanel({ tenderId, risk, hasDocs }: { tenderId: number; risk: Risk 
 }
 
 function ChecklistPanel({ tenderId }: { tenderId: number }) {
-  const { data, isLoading } = useQuery<{ items: ChecklistItem[] }>({
+  const { data, isLoading } = useQuery<ChecklistItem[]>({
     queryKey: ["tender-checklist", tenderId],
     queryFn: () => api(`/api/tenders/${tenderId}/checklist`),
   });
   if (isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  const items = data?.items ?? [];
+  const items = data ?? [];
   const done = items.filter((i) => i.complete).length;
   return (
     <Card>
