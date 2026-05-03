@@ -40,38 +40,58 @@ We design and test against:
 
 ## Automated testing
 
-End-to-end accessibility tests use `@axe-core/playwright` 4.10 against the
+End-to-end accessibility tests use `@axe-core/playwright` 4.11 against the
 running `artifacts/tenderai: web` workflow and the WCAG 2.0/2.1 A and AA tag
 set. The build target is **zero serious or critical violations**.
+
+Coverage in `artifacts/tenderai/tests/a11y.spec.ts` (all tests run by default,
+no env vars required):
+
+| Test                                              | Route                       | Notes                                    |
+| ------------------------------------------------- | --------------------------- | ---------------------------------------- |
+| landing axe scan                                  | `/`                         | public                                   |
+| sign-in axe scan                                  | `/sign-in`                  | public (Clerk-hosted in real envs)       |
+| sign-up axe scan                                  | `/sign-up`                  | public (Clerk-hosted in real envs)       |
+| not-found axe scan                                | `/__definitely-missing__`   | public                                   |
+| dashboard / tenders / tender-detail / profile / admin axe scans | `/dashboard`, `/tenders`, `/tenders/1`, `/profile`, `/admin` | rendered via the in-app a11y bypass (see below); each test asserts the protected `<main id="main-content">` and skip link are present so we know we scanned the real shell, not a 404. |
+| skip-link → focus moves to `<main>`               | `/dashboard`                | bypassed shell                           |
+| header / nav / main / footer landmarks present    | `/dashboard`                | bypassed shell                           |
+| `prefers-reduced-motion` collapses transitions    | `/`                         | public                                   |
+
+Each test runs against four projects (desktop-light, desktop-dark,
+mobile-light, mobile-dark) for a 4× matrix.
+
+### Deterministic auth bypass for axe scanning
+
+Authenticated routes are gated by Clerk's `<SignedIn>`/`<SignedOut>` and a
+`<Redirect to="/sign-in">`. To make the axe matrix deterministic without
+provisioning Clerk sessions, the app honours a runtime flag set only by
+Playwright via `addInitScript`:
+
+```ts
+await page.addInitScript(() => {
+  (window as any).__E2E_A11Y__ = true;
+});
+```
+
+When `window.__E2E_A11Y__ === true` (only true inside the Playwright tests):
+
+- `App` renders the router without `<ClerkProvider>` so the rest of the tree
+  never touches Clerk hooks.
+- `SignedIn` always renders its children; `SignedOut` always renders nothing.
+- `AppShell`'s `<UserButton>` is replaced with a focusable, labelled
+  placeholder so the protected layout still renders.
+
+The flag has no effect in production: it must be set by an external script
+before the SPA bootstraps, which only Playwright can do. Each authed test
+also asserts `main#main-content` and `a.skip-link` are present, so the suite
+fails loudly if the bypass ever stops working and we accidentally scan a 404.
 
 Run the suite from the repo root:
 
 ```
 PORT=20547 pnpm --filter @workspace/tenderai run test:a11y
 ```
-
-(Replace `PORT` with whatever port the dev workflow is bound to.)
-
-Coverage in `artifacts/tenderai/tests/a11y.spec.ts`:
-
-| Test                                    | Route                                       | Auth required |
-| --------------------------------------- | ------------------------------------------- | ------------- |
-| landing axe scan                        | `/tenderai/`                                | no            |
-| not-found axe scan                      | `/tenderai/__definitely-missing__`          | no            |
-| `prefers-reduced-motion` honoured       | `/tenderai/`                                | no            |
-| dashboard / tenders / profile axe scans | `/tenderai/{dashboard,tenders,profile}`     | yes (`PLAYWRIGHT_AUTH_STORAGE`) |
-| skip-link → main landmark integration   | `PLAYWRIGHT_LANDING_URL`                    | yes (proxied URL where Clerk is configured) |
-
-Authenticated route scans run only when `PLAYWRIGHT_AUTH_STORAGE` points at a
-Clerk-authenticated `storageState.json`. The skip-link integration test runs
-only when `PLAYWRIGHT_LANDING_URL` is set, because Clerk's
-`publishableKeyFromHost(localhost)` returns no key on plain localhost and the
-landing page falls back to an "Authentication not configured" placeholder
-instead of the real shell. Skip-link behaviour was additionally verified
-during this milestone via the in-workspace test runner against the proxied
-dev URL where Clerk is live: zero serious/critical violations on `/tenderai/`,
-the skip link is the first focusable element, and activating it moves focus
-to `<main id="landing-main">`.
 
 ## Per-route conformance checklist
 

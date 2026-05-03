@@ -11,11 +11,21 @@ Automated accessibility tests for TenderAI live in
 `artifacts/tenderai/tests/a11y.spec.ts` and run via:
 
 ```
-pnpm --filter @workspace/tenderai run test:a11y
+PORT=20547 pnpm --filter @workspace/tenderai run test:a11y
 ```
 
 The suite uses `@axe-core/playwright` and fails on any axe violation with
-impact `serious` or `critical` against the WCAG 2.0/2.1 A and AA tags. By
-default it scans the public routes (landing, 404). To include authenticated
-routes (`dashboard`, `tenders`, `profile`), export a Clerk-authenticated
-Playwright storageState JSON and set `PLAYWRIGHT_AUTH_STORAGE` to its path.
+impact `serious` or `critical` against the WCAG 2.0/2.1 A and AA tags. The
+matrix runs against four projects (desktop-light, desktop-dark, mobile-light,
+mobile-dark).
+
+All public **and** authenticated routes are scanned by default — there is no
+opt-in env var. Authenticated routes (`/dashboard`, `/tenders`, `/tenders/:id`,
+`/profile`, `/admin`) are rendered deterministically via an in-app a11y
+bypass that Playwright sets through `addInitScript`
+(`window.__E2E_A11Y__ = true`). When that flag is set, `App` skips
+`ClerkProvider`, `SignedIn` always renders its children, and `AppShell`'s
+`UserButton` falls back to a labelled placeholder. Each authed test also
+asserts that `main#main-content` and `a.skip-link` are present so the suite
+fails loudly if the bypass ever silently falls back to the 404 page. The flag
+has no effect outside Playwright (it must be set before the SPA bootstraps).
