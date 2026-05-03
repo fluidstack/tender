@@ -16,8 +16,10 @@ PORT=20547 pnpm --filter @workspace/tenderai run test:a11y
 
 The suite uses `@axe-core/playwright` and fails on any axe violation with
 impact `serious` or `critical` against the WCAG 2.0/2.1 A and AA tags. The
-matrix runs against four projects (desktop-light, desktop-dark, mobile-light,
-mobile-dark).
+matrix runs against six projects (desktop-light, desktop-dark, mobile-light,
+mobile-dark, mobile-375-light, mobile-375-dark — the last two pin a 375×667
+viewport for the WCAG 1.4.10 reflow check), giving a 6× matrix per route. See
+`artifacts/tenderai/playwright.config.ts` for the live project list.
 
 All public **and** authenticated routes are scanned by default — there is no
 opt-in env var. Authenticated routes (`/dashboard`, `/tenders`, `/tenders/:id`,

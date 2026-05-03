@@ -58,8 +58,9 @@ no env vars required):
 | header / nav / main / footer landmarks present    | `/dashboard`                | bypassed shell                           |
 | `prefers-reduced-motion` collapses transitions    | `/`                         | public                                   |
 
-Each test runs against four projects (desktop-light, desktop-dark,
-mobile-light, mobile-dark) for a 4× matrix.
+Each test runs against six projects (desktop-light, desktop-dark,
+mobile-light, mobile-dark, plus mobile-375-light/mobile-375-dark which pin a
+375×667 viewport for the WCAG 1.4.10 reflow check) for a 6× matrix.
 
 ### Deterministic auth bypass for axe scanning
 
@@ -95,7 +96,7 @@ PORT=20547 pnpm --filter @workspace/tenderai run test:a11y
 
 ## Per-route conformance checklist
 
-Each row is verified by the automated axe matrix (desktop + mobile × light +
+Each row is verified by the automated axe matrix (desktop + mobile + 375px-mobile × light +
 dark) plus the manual keyboard / screen-reader walkthrough recorded during
 this milestone. ✓ = pass, n/a = SC does not apply to that route.
 
