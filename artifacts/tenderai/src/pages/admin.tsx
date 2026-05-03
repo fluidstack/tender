@@ -163,7 +163,7 @@ export default function AdminPage() {
     <div className="space-y-6" data-testid="admin-page">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Administration</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Administration</h1>
           <p className="text-sm text-muted-foreground">
             Cross-account view of users, tenders, activity, and ingestion.
           </p>
@@ -172,7 +172,7 @@ export default function AdminPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList aria-label="Admin sections">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="tenders">All tenders</TabsTrigger>
@@ -291,6 +291,7 @@ export default function AdminPage() {
                 size="sm"
                 onClick={() => triggerRun.mutate()}
                 disabled={triggerRun.isPending}
+                aria-busy={triggerRun.isPending}
                 data-testid="run-incremental-button"
               >
                 {triggerRun.isPending ? "Running…" : "Run incremental"}

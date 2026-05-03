@@ -40,10 +40,38 @@ We design and test against:
 
 ## Automated testing
 
-End-to-end accessibility tests use `@axe-core/playwright` against the running
-`artifacts/tenderai: web` workflow. The test plan covers the landing page,
-dashboard, tenders list, tender detail, and profile page; the build target is
-**zero serious or critical violations**.
+End-to-end accessibility tests use `@axe-core/playwright` 4.10 against the
+running `artifacts/tenderai: web` workflow and the WCAG 2.0/2.1 A and AA tag
+set. The build target is **zero serious or critical violations**.
+
+Run the suite from the repo root:
+
+```
+PORT=20547 pnpm --filter @workspace/tenderai run test:a11y
+```
+
+(Replace `PORT` with whatever port the dev workflow is bound to.)
+
+Coverage in `artifacts/tenderai/tests/a11y.spec.ts`:
+
+| Test                                    | Route                                       | Auth required |
+| --------------------------------------- | ------------------------------------------- | ------------- |
+| landing axe scan                        | `/tenderai/`                                | no            |
+| not-found axe scan                      | `/tenderai/__definitely-missing__`          | no            |
+| `prefers-reduced-motion` honoured       | `/tenderai/`                                | no            |
+| dashboard / tenders / profile axe scans | `/tenderai/{dashboard,tenders,profile}`     | yes (`PLAYWRIGHT_AUTH_STORAGE`) |
+| skip-link → main landmark integration   | `PLAYWRIGHT_LANDING_URL`                    | yes (proxied URL where Clerk is configured) |
+
+Authenticated route scans run only when `PLAYWRIGHT_AUTH_STORAGE` points at a
+Clerk-authenticated `storageState.json`. The skip-link integration test runs
+only when `PLAYWRIGHT_LANDING_URL` is set, because Clerk's
+`publishableKeyFromHost(localhost)` returns no key on plain localhost and the
+landing page falls back to an "Authentication not configured" placeholder
+instead of the real shell. Skip-link behaviour was additionally verified
+during this milestone via the in-workspace test runner against the proxied
+dev URL where Clerk is live: zero serious/critical violations on `/tenderai/`,
+the skip link is the first focusable element, and activating it moves focus
+to `<main id="landing-main">`.
 
 ## Known limitations
 

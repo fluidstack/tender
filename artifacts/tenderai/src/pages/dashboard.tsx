@@ -63,7 +63,7 @@ export default function Dashboard() {
         </div>
         <Link href="/tenders">
           <Button data-testid="button-add-tender">
-            <Plus className="h-4 w-4 mr-2" /> Add tender
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Add tender
           </Button>
         </Link>
       </div>
@@ -87,7 +87,7 @@ export default function Dashboard() {
             <Progress value={data.profileCompleteness} />
             <Link href="/profile">
               <Button variant="link" className="px-0 mt-2">
-                Improve profile <ArrowRight className="h-3 w-3 ml-1" />
+                Improve profile <ArrowRight className="h-3 w-3 ml-1" aria-hidden="true" />
               </Button>
             </Link>
           </CardContent>
@@ -128,7 +128,7 @@ export default function Dashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <FileSearch className="h-4 w-4" /> Recent activity
+            <FileSearch className="h-4 w-4" aria-hidden="true" /> Recent activity
           </CardTitle>
         </CardHeader>
         <CardContent>
