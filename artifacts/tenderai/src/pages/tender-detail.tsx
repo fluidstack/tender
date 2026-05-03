@@ -106,7 +106,7 @@ export default function TenderDetail({ id }: { id: number }) {
     <div className="space-y-6">
       <Link href="/tenders">
         <Button variant="ghost" size="sm" data-testid="button-back">
-          <ArrowLeft className="h-4 w-4 mr-1" /> All tenders
+          <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> All tenders
         </Button>
       </Link>
 
@@ -130,9 +130,9 @@ export default function TenderDetail({ id }: { id: number }) {
             data-testid="button-save-tender"
           >
             {tender.saved ? (
-              <><BookmarkCheck className="h-4 w-4 mr-2" /> Saved</>
+              <><BookmarkCheck className="h-4 w-4 mr-2" aria-hidden="true" /> Saved</>
             ) : (
-              <><Bookmark className="h-4 w-4 mr-2" /> Save</>
+              <><Bookmark className="h-4 w-4 mr-2" aria-hidden="true" /> Save</>
             )}
           </Button>
           {tender.matchScore != null && (
@@ -247,7 +247,7 @@ function DocumentsPanel({ tenderId, docs }: { tenderId: number; docs: Doc[] }) {
             }}
           />
           <Button asChild variant="outline" disabled={upload.isUploading || attach.isPending}>
-            <span><Upload className="h-4 w-4 mr-2" /> {upload.isUploading || attach.isPending ? "Processing…" : "Upload PDF or DOCX"}</span>
+            <span><Upload className="h-4 w-4 mr-2" aria-hidden="true" /> {upload.isUploading || attach.isPending ? "Processing…" : "Upload PDF or DOCX"}</span>
           </Button>
         </label>
 
@@ -436,7 +436,7 @@ function ChecklistPanel({ tenderId }: { tenderId: number }) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <ListChecks className="h-4 w-4" /> Submission checklist ({done}/{items.length})
+          <ListChecks className="h-4 w-4" aria-hidden="true" /> Submission checklist ({done}/{items.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -446,9 +446,9 @@ function ChecklistPanel({ tenderId }: { tenderId: number }) {
         {items.map((it) => (
           <div key={it.id} className="flex items-start gap-3 py-1" data-testid={`checklist-${it.id}`}>
             {it.complete ? (
-              <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 mt-0.5 text-green-600 shrink-0" aria-hidden="true" />
             ) : (
-              <Circle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+              <Circle className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" aria-hidden="true" />
             )}
             <div className="flex-1">
               <div className="text-sm font-medium">{it.label}</div>
@@ -498,19 +498,19 @@ function DraftPanel({ tenderId, draft }: { tenderId: number; draft: Draft | null
         </p>
         <div className="flex items-center gap-2">
           <Button onClick={() => generate.mutate()} disabled={generate.isPending} data-testid="button-generate-draft">
-            <FileText className="h-4 w-4 mr-2" /> {generate.isPending ? "Generating…" : draft ? "Regenerate" : "Generate draft"}
+            <FileText className="h-4 w-4 mr-2" aria-hidden="true" /> {generate.isPending ? "Generating…" : draft ? "Regenerate" : "Generate draft"}
           </Button>
           {draft && (
             <>
               <Button variant="outline" onClick={() => save.mutate(sections)} disabled={save.isPending}>Save</Button>
               <Button variant="outline" asChild>
                 <a href={`/api/tenders/${tenderId}/draft/export?format=docx`} download data-testid="button-export-docx">
-                  <Download className="h-4 w-4 mr-2" /> DOCX
+                  <Download className="h-4 w-4 mr-2" aria-hidden="true" /> DOCX
                 </a>
               </Button>
               <Button variant="outline" asChild>
                 <a href={`/api/tenders/${tenderId}/draft/export?format=pdf`} download data-testid="button-export-pdf">
-                  <Download className="h-4 w-4 mr-2" /> PDF
+                  <Download className="h-4 w-4 mr-2" aria-hidden="true" /> PDF
                 </a>
               </Button>
             </>
@@ -531,7 +531,7 @@ function DraftPanel({ tenderId, draft }: { tenderId: number; draft: Draft | null
               disabled={regenSection.isPending}
               data-testid={`button-regen-${s.key}`}
             >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Regenerate
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" /> Regenerate
             </Button>
           </CardHeader>
           <CardContent>
