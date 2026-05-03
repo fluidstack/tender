@@ -63,7 +63,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </a>
       <header
         role="banner"
-        className="flex items-center justify-between gap-4 border-b border-border px-6 py-3"
+        className="flex items-center justify-between gap-4 border-b border-border px-4 sm:px-6 py-3"
       >
         <div className="flex items-center gap-2">
           <div
@@ -79,9 +79,36 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <span className="text-xs text-muted-foreground">Account</span>
         </div>
       </header>
+      <nav
+        className="md:hidden flex gap-1 overflow-x-auto border-b border-border px-3 py-2"
+        aria-label="Main navigation"
+      >
+        {nav.map((item) => {
+          const active =
+            location === item.href || location.startsWith(item.href + "/");
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm whitespace-nowrap",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "text-foreground hover:bg-accent",
+              )}
+              aria-current={active ? "page" : undefined}
+              data-testid={`nav-mobile-${item.label.toLowerCase()}`}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
       <div className="flex flex-1 min-h-0">
         <aside
-          className="w-60 border-r border-border bg-sidebar p-4 flex flex-col"
+          className="hidden md:flex w-60 border-r border-border bg-sidebar p-4 flex-col"
           aria-label="Primary"
         >
           <nav className="flex flex-col gap-1" aria-label="Main navigation">
@@ -115,12 +142,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           tabIndex={-1}
           className="flex-1 overflow-auto focus:outline-none"
         >
-          <div className="max-w-6xl w-full mx-auto px-6 py-8">{children}</div>
+          <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            {children}
+          </div>
         </main>
       </div>
       <footer
         role="contentinfo"
-        className="border-t border-border px-6 py-3 text-xs text-muted-foreground"
+        className="border-t border-border px-4 sm:px-6 py-3 text-xs text-muted-foreground"
       >
         TenderAI — see the{" "}
         <a

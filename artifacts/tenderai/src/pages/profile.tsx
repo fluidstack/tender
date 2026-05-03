@@ -103,8 +103,21 @@ export default function ProfilePage() {
       <Card>
         <CardHeader><CardTitle className="text-base">Company details</CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
-          <Field label="Company name" testid="input-companyName">
-            <Input value={form.companyName ?? ""} onChange={(e) => setField("companyName", e.target.value)} data-testid="input-companyName" />
+          <Field
+            label="Company name"
+            required
+            error={
+              (form.companyName ?? "").trim() === ""
+                ? "Company name is required"
+                : undefined
+            }
+          >
+            <Input
+              value={form.companyName ?? ""}
+              onChange={(e) => setField("companyName", e.target.value)}
+              data-testid="input-companyName"
+              required
+            />
           </Field>
           <Field label="Legal name"><Input value={form.legalName ?? ""} onChange={(e) => setField("legalName", e.target.value)} /></Field>
           <Field label="ABN"><Input value={form.abn ?? ""} onChange={(e) => setField("abn", e.target.value)} /></Field>
@@ -192,16 +205,53 @@ export default function ProfilePage() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode; testid?: string }) {
+function Field({
+  label,
+  children,
+  required,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  testid?: string;
+  required?: boolean;
+  error?: string;
+}) {
   const id = useId();
-  // Wire htmlFor → input id so screen readers announce the label (WCAG 1.3.1, 3.3.2)
+  const errorId = `${id}-error`;
+  // Wire htmlFor → input id so screen readers announce the label (WCAG 1.3.1, 3.3.2);
+  // also propagate aria-required, aria-invalid and aria-describedby for required
+  // controls so SC 3.3.1 / 3.3.2 / 4.1.2 are met without visual-only cues.
+  const extra: Record<string, unknown> = { id };
+  if (required) {
+    extra["aria-required"] = true;
+    if (error) {
+      extra["aria-invalid"] = true;
+      extra["aria-describedby"] = errorId;
+    }
+  }
   const child = isValidElement(children)
-    ? cloneElement(children as ReactElement<{ id?: string }>, { id })
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, extra)
     : children;
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && (
+          <>
+            <span aria-hidden="true" className="text-destructive ml-0.5">
+              *
+            </span>
+            <span className="sr-only"> (required)</span>
+          </>
+        )}
+      </Label>
       {child}
+      {required && error && (
+        <p id={errorId} role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

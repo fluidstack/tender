@@ -182,7 +182,7 @@ export default function AdminPage() {
 
         <TabsContent value="overview" className="mt-4">
           {stats.data ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard label="Users with profile" value={stats.data.profileCount} />
               <StatCard label="Active tender owners" value={stats.data.userCount} />
               <StatCard label="User tenders" value={stats.data.tenderCount} />
