@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, and } from "drizzle-orm";
-import { db, tenders, activityEntries } from "@workspace/db";
+import { eq, desc, and, sql } from "drizzle-orm";
+import { db, tenders, activityEntries, sourceTenders } from "@workspace/db";
 import { requireAuth, getUserId } from "../lib/auth";
 import { getOrCreateProfile } from "../lib/profile";
 import { computeCompleteness } from "../lib/profile";
@@ -10,9 +10,20 @@ import { seedSampleTendersForUser } from "../lib/seed";
 const router: IRouter = Router();
 router.use(requireAuth);
 
+async function shouldSeedSamples(): Promise<boolean> {
+  if (process.env.DISABLE_SAMPLE_SEED === "1") return false;
+  if (process.env.FORCE_SAMPLE_SEED === "1") return true;
+  const [{ count = 0 } = { count: 0 }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(sourceTenders);
+  return count === 0;
+}
+
 router.get("/dashboard/summary", async (req, res): Promise<void> => {
   const userId = getUserId(req);
-  await seedSampleTendersForUser(userId);
+  if (await shouldSeedSamples()) {
+    await seedSampleTendersForUser(userId);
+  }
   const [profile, allTenders, activity] = await Promise.all([
     getOrCreateProfile(userId),
     db.select().from(tenders).where(eq(tenders.userId, userId)),

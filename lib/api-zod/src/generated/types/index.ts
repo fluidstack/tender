@@ -8,7 +8,13 @@
 
 export * from "./activityEntry";
 export * from "./attachTenderDocumentInput";
+export * from "./authMe";
 export * from "./businessProfile";
+export * from "./catalogueAward";
+export * from "./catalogueDocument";
+export * from "./catalogueTender";
+export * from "./catalogueTenderDetail";
+export * from "./catalogueTenderPage";
 export * from "./certification";
 export * from "./checklistItem";
 export * from "./complianceItem";
@@ -22,6 +28,8 @@ export * from "./draftSection";
 export * from "./errorEnvelope";
 export * from "./exportTenderDraftParams";
 export * from "./healthStatus";
+export * from "./importTenderInput";
+export * from "./listCatalogueTendersParams";
 export * from "./listTendersParams";
 export * from "./pastPerformance";
 export * from "./profileCompleteness";

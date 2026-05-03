@@ -9,6 +9,8 @@ import {
   riskReports,
   tenderDrafts,
   activityEntries,
+  sourceTenders,
+  organisations,
 } from "@workspace/db";
 import {
   CreateTenderBody,
@@ -100,6 +102,80 @@ router.post("/tenders", async (req, res): Promise<void> => {
     userId,
     kind: "tender_created",
     label: `Created tender ${row.title}`,
+    tenderId: row.id,
+    tenderTitle: row.title,
+  });
+  res.status(201).json(await decorate(row, userId));
+});
+
+router.post("/tenders/import", async (req, res): Promise<void> => {
+  const userId = getUserId(req);
+  const sourceId = Number(req.body?.sourceTenderId);
+  if (!Number.isFinite(sourceId)) {
+    res.status(400).json({ error: "sourceTenderId required" });
+    return;
+  }
+  const [src] = await db
+    .select({
+      tender: sourceTenders,
+      buyer: organisations,
+    })
+    .from(sourceTenders)
+    .leftJoin(organisations, eq(sourceTenders.buyerOrgId, organisations.id))
+    .where(eq(sourceTenders.id, sourceId));
+  if (!src) {
+    res.status(404).json({ error: "Source tender not found" });
+    return;
+  }
+  const inserted = await db
+    .insert(tenders)
+    .values({
+      userId,
+      title: src.tender.title,
+      agency: src.buyer?.name ?? "Unknown buyer",
+      reference: src.tender.sourceTenderId,
+      category: src.tender.category,
+      location: src.tender.location,
+      summary: src.tender.description,
+      budget:
+        src.tender.estimatedValueMin || src.tender.estimatedValueMax
+          ? `${src.tender.currency ?? "AUD"} ${
+              src.tender.estimatedValueMin ?? "?"
+            } – ${src.tender.estimatedValueMax ?? "?"}`
+          : null,
+      closeDate: src.tender.closingAt
+        ? src.tender.closingAt.toISOString().slice(0, 10)
+        : null,
+      publishedDate: src.tender.publishedAt
+        ? src.tender.publishedAt.toISOString().slice(0, 10)
+        : null,
+      status: "open",
+      sourceTenderId: sourceId,
+    })
+    .onConflictDoNothing({
+      target: [tenders.userId, tenders.sourceTenderId],
+      where: sql`${tenders.sourceTenderId} IS NOT NULL`,
+    })
+    .returning();
+  if (inserted.length === 0) {
+    const [existing] = await db
+      .select()
+      .from(tenders)
+      .where(
+        and(eq(tenders.userId, userId), eq(tenders.sourceTenderId, sourceId)),
+      );
+    if (!existing) {
+      res.status(500).json({ error: "Import failed" });
+      return;
+    }
+    res.status(200).json(await decorate(existing, userId));
+    return;
+  }
+  const row = inserted[0];
+  await db.insert(activityEntries).values({
+    userId,
+    kind: "tender_imported",
+    label: `Imported tender ${row.title}`,
     tenderId: row.id,
     tenderTitle: row.title,
   });

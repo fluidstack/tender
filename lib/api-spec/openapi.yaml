@@ -17,6 +17,7 @@ tags:
   - name: risks
   - name: response
   - name: dashboard
+  - name: catalogue
   - name: Storage
 paths:
   /healthz:
@@ -258,6 +259,81 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Tender"
+
+  /tenders/import:
+    post:
+      operationId: importCatalogueTender
+      tags: [tenders]
+      summary: Import a catalogue tender into the user's workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportTenderInput"
+      responses:
+        "200":
+          description: Already imported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tender"
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tender"
+        "404":
+          description: Source tender not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /catalogue/tenders:
+    get:
+      operationId: listCatalogueTenders
+      tags: [catalogue]
+      summary: Browse the live tender catalogue
+      parameters:
+        - { name: search, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: jurisdiction, in: query, required: false, schema: { type: string } }
+        - { name: category, in: query, required: false, schema: { type: string } }
+        - { name: closingBefore, in: query, required: false, schema: { type: string, format: date-time } }
+        - { name: closingAfter, in: query, required: false, schema: { type: string, format: date-time } }
+        - { name: minValue, in: query, required: false, schema: { type: integer } }
+        - { name: maxValue, in: query, required: false, schema: { type: integer } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: offset, in: query, required: false, schema: { type: integer, minimum: 0 } }
+      responses:
+        "200":
+          description: Catalogue page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogueTenderPage"
+
+  /catalogue/tenders/{id}:
+    get:
+      operationId: getCatalogueTender
+      tags: [catalogue]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Catalogue tender detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogueTenderDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 
   /tenders/top-matches:
     get:
@@ -1054,6 +1130,78 @@ components:
       properties:
         status: { type: string }
         count: { type: integer }
+    ImportTenderInput:
+      type: object
+      required: [sourceTenderId]
+      properties:
+        sourceTenderId: { type: integer }
+
+    CatalogueTender:
+      type: object
+      required: [id, sourceSystem, sourceTenderId, title, status, jurisdiction]
+      properties:
+        id: { type: integer }
+        sourceSystem: { type: string }
+        sourceTenderId: { type: string }
+        ocid: { type: ["string", "null"] }
+        title: { type: string }
+        description: { type: ["string", "null"] }
+        status: { type: string }
+        jurisdiction: { type: string }
+        category: { type: ["string", "null"] }
+        location: { type: ["string", "null"] }
+        estimatedValueMin: { type: ["integer", "null"] }
+        estimatedValueMax: { type: ["integer", "null"] }
+        currency: { type: ["string", "null"] }
+        publishedAt: { type: ["string", "null"], format: date-time }
+        closingAt: { type: ["string", "null"], format: date-time }
+        awardedAt: { type: ["string", "null"], format: date-time }
+        buyerName: { type: ["string", "null"] }
+
+    CatalogueTenderPage:
+      type: object
+      required: [total, limit, offset, items]
+      properties:
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CatalogueTender" }
+
+    CatalogueTenderDetail:
+      allOf:
+        - $ref: "#/components/schemas/CatalogueTender"
+        - type: object
+          properties:
+            documents:
+              type: array
+              items: { $ref: "#/components/schemas/CatalogueDocument" }
+            awards:
+              type: array
+              items: { $ref: "#/components/schemas/CatalogueAward" }
+
+    CatalogueDocument:
+      type: object
+      required: [id, url]
+      properties:
+        id: { type: integer }
+        docType: { type: ["string", "null"] }
+        title: { type: ["string", "null"] }
+        url: { type: string }
+        mimeType: { type: ["string", "null"] }
+
+    CatalogueAward:
+      type: object
+      required: [id]
+      properties:
+        id: { type: integer }
+        awardId: { type: ["string", "null"] }
+        supplierName: { type: ["string", "null"] }
+        value: { type: ["integer", "null"] }
+        currency: { type: ["string", "null"] }
+        awardedAt: { type: ["string", "null"], format: date-time }
+
     ActivityEntry:
       type: object
       required: [id, kind, label, createdAt]

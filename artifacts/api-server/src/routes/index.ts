@@ -6,6 +6,8 @@ import profileRouter from "./profile";
 import tendersRouter from "./tenders";
 import analysisRouter from "./analysis";
 import dashboardRouter from "./dashboard";
+import catalogueRouter from "./catalogue";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use(profileRouter);
 router.use(tendersRouter);
 router.use(analysisRouter);
 router.use(dashboardRouter);
+router.use(catalogueRouter);
+router.use(adminRouter);
 
 export default router;

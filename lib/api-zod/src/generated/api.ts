@@ -15,6 +15,17 @@ export const HealthCheckResponse = zod.object({
 });
 
 /**
+ * @summary Current authenticated user
+ */
+export const GetAuthMeResponse = zod.object({
+  userId: zod.string(),
+  email: zod.string().nullish(),
+  firstName: zod.string().nullish(),
+  lastName: zod.string().nullish(),
+  imageUrl: zod.string().nullish(),
+});
+
+/**
  * @summary Aggregate dashboard counts and recent activity
  */
 export const GetDashboardSummaryResponse = zod.object({
@@ -298,6 +309,141 @@ export const CreateTenderBody = zod.object({
   closeDate: zod.string().nullish(),
   publishedDate: zod.string().nullish(),
 });
+
+/**
+ * @summary Import a catalogue tender into the user's workspace
+ */
+export const ImportCatalogueTenderBody = zod.object({
+  sourceTenderId: zod.number(),
+});
+
+export const ImportCatalogueTenderResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  agency: zod.string(),
+  reference: zod.string().nullish(),
+  category: zod.string().nullish(),
+  location: zod.string().nullish(),
+  summary: zod.string().nullish(),
+  budget: zod.string().nullish(),
+  closeDate: zod.string().nullish(),
+  publishedDate: zod.string().nullish(),
+  status: zod.string().describe("open | closed | drafting | submitted"),
+  saved: zod.boolean().optional(),
+  matchScore: zod.number().nullish().describe("0-100 vs current profile"),
+  matchRationale: zod.string().nullish(),
+  riskScore: zod.number().nullish(),
+  complianceScore: zod.number().nullish(),
+  documentCount: zod.number().optional(),
+  requirementCount: zod.number().optional(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Browse the live tender catalogue
+ */
+export const listCatalogueTendersQueryLimitMax = 100;
+
+export const listCatalogueTendersQueryOffsetMin = 0;
+
+export const ListCatalogueTendersQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  status: zod.coerce.string().optional(),
+  jurisdiction: zod.coerce.string().optional(),
+  category: zod.coerce.string().optional(),
+  closingBefore: zod.date().optional(),
+  closingAfter: zod.date().optional(),
+  minValue: zod.coerce.number().optional(),
+  maxValue: zod.coerce.number().optional(),
+  limit: zod.coerce
+    .number()
+    .min(1)
+    .max(listCatalogueTendersQueryLimitMax)
+    .optional(),
+  offset: zod.coerce
+    .number()
+    .min(listCatalogueTendersQueryOffsetMin)
+    .optional(),
+});
+
+export const ListCatalogueTendersResponse = zod.object({
+  total: zod.number(),
+  limit: zod.number(),
+  offset: zod.number(),
+  items: zod.array(
+    zod.object({
+      id: zod.number(),
+      sourceSystem: zod.string(),
+      sourceTenderId: zod.string(),
+      ocid: zod.string().nullish(),
+      title: zod.string(),
+      description: zod.string().nullish(),
+      status: zod.string(),
+      jurisdiction: zod.string(),
+      category: zod.string().nullish(),
+      location: zod.string().nullish(),
+      estimatedValueMin: zod.number().nullish(),
+      estimatedValueMax: zod.number().nullish(),
+      currency: zod.string().nullish(),
+      publishedAt: zod.coerce.date().nullish(),
+      closingAt: zod.coerce.date().nullish(),
+      awardedAt: zod.coerce.date().nullish(),
+      buyerName: zod.string().nullish(),
+    }),
+  ),
+});
+
+export const GetCatalogueTenderParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetCatalogueTenderResponse = zod
+  .object({
+    id: zod.number(),
+    sourceSystem: zod.string(),
+    sourceTenderId: zod.string(),
+    ocid: zod.string().nullish(),
+    title: zod.string(),
+    description: zod.string().nullish(),
+    status: zod.string(),
+    jurisdiction: zod.string(),
+    category: zod.string().nullish(),
+    location: zod.string().nullish(),
+    estimatedValueMin: zod.number().nullish(),
+    estimatedValueMax: zod.number().nullish(),
+    currency: zod.string().nullish(),
+    publishedAt: zod.coerce.date().nullish(),
+    closingAt: zod.coerce.date().nullish(),
+    awardedAt: zod.coerce.date().nullish(),
+    buyerName: zod.string().nullish(),
+  })
+  .and(
+    zod.object({
+      documents: zod
+        .array(
+          zod.object({
+            id: zod.number(),
+            docType: zod.string().nullish(),
+            title: zod.string().nullish(),
+            url: zod.string(),
+            mimeType: zod.string().nullish(),
+          }),
+        )
+        .optional(),
+      awards: zod
+        .array(
+          zod.object({
+            id: zod.number(),
+            awardId: zod.string().nullish(),
+            supplierName: zod.string().nullish(),
+            value: zod.number().nullish(),
+            currency: zod.string().nullish(),
+            awardedAt: zod.coerce.date().nullish(),
+          }),
+        )
+        .optional(),
+    }),
+  );
 
 /**
  * @summary Top matching tenders for the user's business profile

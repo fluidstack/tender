@@ -18,7 +18,10 @@ import type {
 
 import type {
   AttachTenderDocumentInput,
+  AuthMe,
   BusinessProfile,
+  CatalogueTenderDetail,
+  CatalogueTenderPage,
   Certification,
   ChecklistItem,
   ComplianceReport,
@@ -30,6 +33,8 @@ import type {
   ErrorEnvelope,
   ExportTenderDraftParams,
   HealthStatus,
+  ImportTenderInput,
+  ListCatalogueTendersParams,
   ListTendersParams,
   PastPerformance,
   ProfileCompleteness,
@@ -123,6 +128,71 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Current authenticated user
+ */
+export const getGetAuthMeUrl = () => {
+  return `/api/auth/me`;
+};
+
+export const getAuthMe = async (options?: RequestInit): Promise<AuthMe> => {
+  return customFetch<AuthMe>(getGetAuthMeUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAuthMeQueryKey = () => {
+  return [`/api/auth/me`] as const;
+};
+
+export const getGetAuthMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAuthMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuthMe>>> = ({
+    signal,
+  }) => getAuthMe({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAuthMe>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAuthMeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAuthMe>>
+>;
+export type GetAuthMeQueryError = ErrorType<void>;
+
+/**
+ * @summary Current authenticated user
+ */
+
+export function useGetAuthMe<
+  TData = Awaited<ReturnType<typeof getAuthMe>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getAuthMe>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAuthMeQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -1321,6 +1391,272 @@ export const useCreateTender = <
 > => {
   return useMutation(getCreateTenderMutationOptions(options));
 };
+
+/**
+ * @summary Import a catalogue tender into the user's workspace
+ */
+export const getImportCatalogueTenderUrl = () => {
+  return `/api/tenders/import`;
+};
+
+export const importCatalogueTender = async (
+  importTenderInput: ImportTenderInput,
+  options?: RequestInit,
+): Promise<Tender> => {
+  return customFetch<Tender>(getImportCatalogueTenderUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(importTenderInput),
+  });
+};
+
+export const getImportCatalogueTenderMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importCatalogueTender>>,
+    TError,
+    { data: BodyType<ImportTenderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importCatalogueTender>>,
+  TError,
+  { data: BodyType<ImportTenderInput> },
+  TContext
+> => {
+  const mutationKey = ["importCatalogueTender"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importCatalogueTender>>,
+    { data: BodyType<ImportTenderInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return importCatalogueTender(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportCatalogueTenderMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importCatalogueTender>>
+>;
+export type ImportCatalogueTenderMutationBody = BodyType<ImportTenderInput>;
+export type ImportCatalogueTenderMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Import a catalogue tender into the user's workspace
+ */
+export const useImportCatalogueTender = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importCatalogueTender>>,
+    TError,
+    { data: BodyType<ImportTenderInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof importCatalogueTender>>,
+  TError,
+  { data: BodyType<ImportTenderInput> },
+  TContext
+> => {
+  return useMutation(getImportCatalogueTenderMutationOptions(options));
+};
+
+/**
+ * @summary Browse the live tender catalogue
+ */
+export const getListCatalogueTendersUrl = (
+  params?: ListCatalogueTendersParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/catalogue/tenders?${stringifiedParams}`
+    : `/api/catalogue/tenders`;
+};
+
+export const listCatalogueTenders = async (
+  params?: ListCatalogueTendersParams,
+  options?: RequestInit,
+): Promise<CatalogueTenderPage> => {
+  return customFetch<CatalogueTenderPage>(getListCatalogueTendersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListCatalogueTendersQueryKey = (
+  params?: ListCatalogueTendersParams,
+) => {
+  return [`/api/catalogue/tenders`, ...(params ? [params] : [])] as const;
+};
+
+export const getListCatalogueTendersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listCatalogueTenders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListCatalogueTendersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCatalogueTenders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListCatalogueTendersQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listCatalogueTenders>>
+  > = ({ signal }) =>
+    listCatalogueTenders(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listCatalogueTenders>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListCatalogueTendersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listCatalogueTenders>>
+>;
+export type ListCatalogueTendersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Browse the live tender catalogue
+ */
+
+export function useListCatalogueTenders<
+  TData = Awaited<ReturnType<typeof listCatalogueTenders>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListCatalogueTendersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listCatalogueTenders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListCatalogueTendersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getGetCatalogueTenderUrl = (id: number) => {
+  return `/api/catalogue/tenders/${id}`;
+};
+
+export const getCatalogueTender = async (
+  id: number,
+  options?: RequestInit,
+): Promise<CatalogueTenderDetail> => {
+  return customFetch<CatalogueTenderDetail>(getGetCatalogueTenderUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCatalogueTenderQueryKey = (id: number) => {
+  return [`/api/catalogue/tenders/${id}`] as const;
+};
+
+export const getGetCatalogueTenderQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCatalogueTender>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCatalogueTender>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCatalogueTenderQueryKey(id);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getCatalogueTender>>
+  > = ({ signal }) => getCatalogueTender(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCatalogueTender>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCatalogueTenderQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCatalogueTender>>
+>;
+export type GetCatalogueTenderQueryError = ErrorType<ErrorEnvelope>;
+
+export function useGetCatalogueTender<
+  TData = Awaited<ReturnType<typeof getCatalogueTender>>,
+  TError = ErrorType<ErrorEnvelope>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getCatalogueTender>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCatalogueTenderQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Top matching tenders for the user's business profile

@@ -9,6 +9,14 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface AuthMe {
+  userId: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  imageUrl?: string | null;
+}
+
 export interface ErrorEnvelope {
   error: string;
 }
@@ -430,9 +438,101 @@ export interface DashboardSummary {
   statusBreakdown: StatusCount[];
 }
 
+export interface ImportTenderInput {
+  sourceTenderId: number;
+}
+
+export interface CatalogueTender {
+  id: number;
+  sourceSystem: string;
+  sourceTenderId: string;
+  /** @nullable */
+  ocid?: string | null;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  status: string;
+  jurisdiction: string;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  location?: string | null;
+  /** @nullable */
+  estimatedValueMin?: number | null;
+  /** @nullable */
+  estimatedValueMax?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  /** @nullable */
+  closingAt?: string | null;
+  /** @nullable */
+  awardedAt?: string | null;
+  /** @nullable */
+  buyerName?: string | null;
+}
+
+export interface CatalogueTenderPage {
+  total: number;
+  limit: number;
+  offset: number;
+  items: CatalogueTender[];
+}
+
+export interface CatalogueDocument {
+  id: number;
+  /** @nullable */
+  docType?: string | null;
+  /** @nullable */
+  title?: string | null;
+  url: string;
+  /** @nullable */
+  mimeType?: string | null;
+}
+
+export interface CatalogueAward {
+  id: number;
+  /** @nullable */
+  awardId?: string | null;
+  /** @nullable */
+  supplierName?: string | null;
+  /** @nullable */
+  value?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  /** @nullable */
+  awardedAt?: string | null;
+}
+
+export type CatalogueTenderDetail = CatalogueTender & {
+  documents?: CatalogueDocument[];
+  awards?: CatalogueAward[];
+};
+
 export type ListTendersParams = {
   search?: string;
   status?: string;
+};
+
+export type ListCatalogueTendersParams = {
+  search?: string;
+  status?: string;
+  jurisdiction?: string;
+  category?: string;
+  closingBefore?: string;
+  closingAfter?: string;
+  minValue?: number;
+  maxValue?: number;
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number;
+  /**
+   * @minimum 0
+   */
+  offset?: number;
 };
 
 export type ExportTenderDraftParams = {
