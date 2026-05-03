@@ -19,6 +19,7 @@ import { requireAuth, getUserId } from "../lib/auth";
 import { getOrCreateProfile } from "../lib/profile";
 import { computeMatchScore } from "../lib/matching";
 import { parseDocument } from "../lib/parse";
+import { consumeUploadClaim } from "./storage";
 
 const router: IRouter = Router();
 router.use(requireAuth);
@@ -216,12 +217,8 @@ router.post("/tenders/:id/documents", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid object path" });
     return;
   }
-  const [claimed] = await db
-    .select({ id: tenderDocuments.id })
-    .from(tenderDocuments)
-    .where(eq(tenderDocuments.objectPath, parsed.data.objectPath));
-  if (claimed) {
-    res.status(409).json({ error: "Object already attached" });
+  if (!consumeUploadClaim(parsed.data.objectPath, userId)) {
+    res.status(403).json({ error: "Upload claim missing or expired for this object" });
     return;
   }
   const [doc] = await db

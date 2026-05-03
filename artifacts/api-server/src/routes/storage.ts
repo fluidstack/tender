@@ -12,6 +12,22 @@ import { requireAuth, getUserId } from "../lib/auth";
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
+// In-memory upload claims (single-process v1): objectPath -> { userId, expiresAt }
+const uploadClaims = new Map<string, { userId: string; expiresAt: number }>();
+const CLAIM_TTL_MS = 60 * 60 * 1000; // 1h
+
+export function consumeUploadClaim(objectPath: string, userId: string): boolean {
+  const claim = uploadClaims.get(objectPath);
+  if (!claim) return false;
+  if (claim.userId !== userId) return false;
+  if (claim.expiresAt < Date.now()) {
+    uploadClaims.delete(objectPath);
+    return false;
+  }
+  uploadClaims.delete(objectPath);
+  return true;
+}
+
 /**
  * POST /storage/uploads/request-url
  *
@@ -31,6 +47,11 @@ router.post("/storage/uploads/request-url", requireAuth, async (req: Request, re
 
     const uploadURL = await objectStorageService.getObjectEntityUploadURL();
     const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+
+    uploadClaims.set(objectPath, {
+      userId: getUserId(req),
+      expiresAt: Date.now() + CLAIM_TTL_MS,
+    });
 
     res.json(
       RequestUploadUrlResponse.parse({

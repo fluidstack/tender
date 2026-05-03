@@ -8,6 +8,7 @@ servers:
     description: Base API path
 tags:
   - name: health
+  - name: auth
   - name: profile
   - name: tenders
   - name: documents
@@ -30,6 +31,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Current authenticated user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthMe"
+        "401":
+          description: Not authenticated
 
   /dashboard/summary:
     get:
@@ -623,6 +639,16 @@ components:
       properties:
         status: { type: string }
       required: [status]
+
+    AuthMe:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: string }
+        email: { type: string, nullable: true }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        imageUrl: { type: string, nullable: true }
 
     ErrorEnvelope:
       type: object
