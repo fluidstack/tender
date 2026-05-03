@@ -718,13 +718,14 @@ components:
 
     AuthMe:
       type: object
-      required: [userId]
+      required: [userId, isAdmin]
       properties:
         userId: { type: string }
         email: { type: string, nullable: true }
         firstName: { type: string, nullable: true }
         lastName: { type: string, nullable: true }
         imageUrl: { type: string, nullable: true }
+        isAdmin: { type: boolean }
 
     ErrorEnvelope:
       type: object

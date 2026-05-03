@@ -5,8 +5,10 @@ import {
   FileSearch,
   Building2,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useGetAuthMe } from "@workspace/api-client-react";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -14,8 +16,16 @@ const NAV = [
   { href: "/profile", label: "Profile", icon: Building2 },
 ];
 
+const ADMIN_NAV = {
+  href: "/admin",
+  label: "Admin",
+  icon: ShieldCheck,
+} as const;
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { data: me } = useGetAuthMe();
+  const nav = me?.isAdmin ? [...NAV, ADMIN_NAV] : NAV;
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       <aside className="w-60 border-r border-border bg-sidebar p-4 flex flex-col">
@@ -26,7 +36,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="font-semibold tracking-tight">TenderAI</div>
         </div>
         <nav className="flex flex-col gap-1">
-          {NAV.map((item) => {
+          {nav.map((item) => {
             const active =
               location === item.href || location.startsWith(item.href + "/");
             const Icon = item.icon;

@@ -23,6 +23,7 @@ export const GetAuthMeResponse = zod.object({
   firstName: zod.string().nullish(),
   lastName: zod.string().nullish(),
   imageUrl: zod.string().nullish(),
+  isAdmin: zod.boolean(),
 });
 
 /**

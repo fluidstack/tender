@@ -15,6 +15,7 @@ export interface AuthMe {
   firstName?: string | null;
   lastName?: string | null;
   imageUrl?: string | null;
+  isAdmin: boolean;
 }
 
 export interface ErrorEnvelope {

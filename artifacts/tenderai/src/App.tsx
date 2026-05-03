@@ -14,6 +14,7 @@ import Dashboard from "@/pages/dashboard";
 import Profile from "@/pages/profile";
 import TendersList from "@/pages/tenders";
 import TenderDetail from "@/pages/tender-detail";
+import AdminPage from "@/pages/admin";
 import AppShell from "@/components/AppShell";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "") || "";
@@ -84,6 +85,11 @@ function Routes() {
       <Route path="/tenders">
         <Protected>
           <AppShell><TendersList /></AppShell>
+        </Protected>
+      </Route>
+      <Route path="/admin">
+        <Protected>
+          <AppShell><AdminPage /></AppShell>
         </Protected>
       </Route>
       <Route path="/tenders/:id">
