@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import {
   db,
   businessProfiles,
@@ -93,7 +93,10 @@ router.post("/profile/staff", async (req, res): Promise<void> => {
 
 router.delete("/profile/staff/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
-  await db.delete(staffMembers).where(eq(staffMembers.id, id));
+  const profile = await getOrCreateProfile(getUserId(req));
+  await db
+    .delete(staffMembers)
+    .where(and(eq(staffMembers.id, id), eq(staffMembers.profileId, profile.id)));
   res.sendStatus(204);
 });
 
@@ -123,7 +126,10 @@ router.post("/profile/past-performance", async (req, res): Promise<void> => {
 
 router.delete("/profile/past-performance/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
-  await db.delete(pastPerformance).where(eq(pastPerformance.id, id));
+  const profile = await getOrCreateProfile(getUserId(req));
+  await db
+    .delete(pastPerformance)
+    .where(and(eq(pastPerformance.id, id), eq(pastPerformance.profileId, profile.id)));
   res.sendStatus(204);
 });
 
@@ -153,7 +159,10 @@ router.post("/profile/certifications", async (req, res): Promise<void> => {
 
 router.delete("/profile/certifications/:id", async (req, res): Promise<void> => {
   const id = Number(req.params.id);
-  await db.delete(certifications).where(eq(certifications.id, id));
+  const profile = await getOrCreateProfile(getUserId(req));
+  await db
+    .delete(certifications)
+    .where(and(eq(certifications.id, id), eq(certifications.profileId, profile.id)));
   res.sendStatus(204);
 });
 

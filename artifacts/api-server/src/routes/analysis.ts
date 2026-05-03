@@ -184,11 +184,13 @@ router.post("/tenders/:id/compliance", async (req, res): Promise<void> => {
     fallback: { score: 0, summary: "Unable to generate", gaps: [], items: [] },
   });
 
+  const complianceStatuses = ["met", "partial", "gap"] as const;
+  type ComplianceStatus = (typeof complianceStatuses)[number];
+  const isComplianceStatus = (v: unknown): v is ComplianceStatus =>
+    typeof v === "string" && (complianceStatuses as readonly string[]).includes(v);
   const items = (result.items ?? []).map((i) => ({
     requirement: i.requirement || "",
-    status: (["met", "partial", "gap"] as const).includes(i.status as any)
-      ? (i.status as ComplianceItemJson["status"])
-      : ("gap" as const),
+    status: isComplianceStatus(i.status) ? i.status : ("gap" as const),
     evidence: i.evidence || "",
     recommendation: i.recommendation ?? null,
   }));
@@ -256,12 +258,14 @@ router.post("/tenders/:id/risks", async (req, res): Promise<void> => {
     fallback: { overallRisk: "medium", summary: "Unable to generate", items: [] },
   });
 
+  const severities = ["low", "medium", "high"] as const;
+  type Severity = (typeof severities)[number];
+  const isSeverity = (v: unknown): v is Severity =>
+    typeof v === "string" && (severities as readonly string[]).includes(v);
   const items = (result.items ?? []).map((i) => ({
     clause: i.clause || "",
     category: i.category || "general",
-    severity: (["low", "medium", "high"] as const).includes(i.severity as any)
-      ? (i.severity as RiskItemJson["severity"])
-      : "medium",
+    severity: isSeverity(i.severity) ? i.severity : ("medium" as const),
     rationale: i.rationale || "",
     suggestion: i.suggestion ?? null,
   }));

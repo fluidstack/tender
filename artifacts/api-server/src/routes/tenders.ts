@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, desc, ilike, or } from "drizzle-orm";
+import { eq, and, desc, ilike, or, sql } from "drizzle-orm";
 import {
   db,
   tenders,
@@ -31,23 +31,25 @@ async function ownTender(userId: string, id: number) {
   return t ?? null;
 }
 
-async function decorate(tender: any, userId: string) {
+type TenderRow = typeof tenders.$inferSelect;
+
+async function decorate(tender: TenderRow, userId: string) {
   const profile = await getOrCreateProfile(userId);
-  const [{ count: docCount } = { count: 0 }] = (await db.execute(
-    `SELECT COUNT(*)::int AS count FROM tender_documents WHERE tender_id=${tender.id}` as any,
-  )) as any;
-  const docCountVal = (docCount as number) ?? 0;
-  const [{ count: reqCount } = { count: 0 }] = (await db.execute(
-    `SELECT COUNT(*)::int AS count FROM requirements WHERE tender_id=${tender.id}` as any,
-  )) as any;
-  const reqCountVal = (reqCount as number) ?? 0;
+  const [docRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(tenderDocuments)
+    .where(eq(tenderDocuments.tenderId, tender.id));
+  const [reqRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(requirements)
+    .where(eq(requirements.tenderId, tender.id));
   const { score, rationale } = computeMatchScore(tender, profile);
   return {
     ...tender,
     matchScore: tender.matchScore ?? score,
     matchRationale: tender.matchRationale ?? rationale,
-    documentCount: docCountVal,
-    requirementCount: reqCountVal,
+    documentCount: docRow?.count ?? 0,
+    requirementCount: reqRow?.count ?? 0,
   };
 }
 
@@ -258,7 +260,11 @@ router.delete(
       res.status(404).json({ error: "Not found" });
       return;
     }
-    await db.delete(tenderDocuments).where(eq(tenderDocuments.id, docId));
+    await db
+      .delete(tenderDocuments)
+      .where(
+        and(eq(tenderDocuments.id, docId), eq(tenderDocuments.tenderId, id)),
+      );
     res.sendStatus(204);
   },
 );
