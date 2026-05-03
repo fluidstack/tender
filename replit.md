@@ -24,3 +24,12 @@ AI-powered tender response platform for Australian businesses bidding on governm
 - Sample tenders seed lazily per user via `seedSampleTendersForUser` on GET /api/dashboard/summary
 - Single-user v1 — no AusTender, no Stripe
 - Clerk uses publishableKeyFromHost(hostname, fallback) so dev test key works
+
+## Accessibility
+- Targets WCAG 2.1 AA. See `artifacts/tenderai/docs/accessibility.md`.
+- Skip link, semantic landmarks, focus-on-route, `aria-current` nav are in `AppShell.tsx` (and `landing.tsx`).
+- Global tokens: `--muted-foreground` raised to `215 25% 35%` for AA contrast; global `:focus-visible` ring; `prefers-reduced-motion` honoured (see `src/index.css`).
+- Form pattern: every `<Label>` is `htmlFor`-bound; required fields use `aria-required` + `aria-invalid`. Profile `Field` injects an `id` via `cloneElement`.
+- Icon-only buttons carry `aria-label`; decorative `lucide-react` icons get `aria-hidden="true"`.
+- Toaster passes `type="foreground"` for destructive variants (assertive announcements) and `"background"` otherwise.
+- Viewport allows zoom (no `maximum-scale`).

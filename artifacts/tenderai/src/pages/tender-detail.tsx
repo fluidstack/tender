@@ -262,7 +262,14 @@ function DocumentsPanel({ tenderId, docs }: { tenderId: number; docs: Doc[] }) {
                 {d.parseError ? ` · ${d.parseError}` : ""}
               </div>
             </div>
-            <Button size="icon" variant="ghost" onClick={() => del.mutate(d.id)}><Trash2 className="h-4 w-4" /></Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => del.mutate(d.id)}
+              aria-label={`Delete document ${d.name}`}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </Button>
           </div>
         ))}
       </CardContent>
@@ -282,8 +289,14 @@ function RequirementsPanel({ tenderId, reqs, hasDocs }: { tenderId: number; reqs
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Requirements</CardTitle>
-        <Button size="sm" onClick={() => extract.mutate()} disabled={!hasDocs || extract.isPending} data-testid="button-extract">
-          <Sparkles className="h-4 w-4 mr-2" /> {extract.isPending ? "Extracting…" : "Extract with AI"}
+        <Button
+          size="sm"
+          onClick={() => extract.mutate()}
+          disabled={!hasDocs || extract.isPending}
+          aria-busy={extract.isPending}
+          data-testid="button-extract"
+        >
+          <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" /> {extract.isPending ? "Extracting…" : "Extract with AI"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-2">
@@ -313,8 +326,14 @@ function CompliancePanel({ tenderId, comp, hasReqs }: { tenderId: number; comp: 
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Compliance & gap analysis</CardTitle>
-        <Button size="sm" onClick={() => run.mutate()} disabled={!hasReqs || run.isPending} data-testid="button-compliance">
-          <ShieldCheck className="h-4 w-4 mr-2" /> {run.isPending ? "Analysing…" : comp ? "Re-run" : "Run analysis"}
+        <Button
+          size="sm"
+          onClick={() => run.mutate()}
+          disabled={!hasReqs || run.isPending}
+          aria-busy={run.isPending}
+          data-testid="button-compliance"
+        >
+          <ShieldCheck className="h-4 w-4 mr-2" aria-hidden="true" /> {run.isPending ? "Analysing…" : comp ? "Re-run" : "Run analysis"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -365,8 +384,14 @@ function RisksPanel({ tenderId, risk, hasDocs }: { tenderId: number; risk: Risk 
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-base">Contract risk analysis</CardTitle>
-        <Button size="sm" onClick={() => run.mutate()} disabled={!hasDocs || run.isPending} data-testid="button-risks">
-          <AlertTriangle className="h-4 w-4 mr-2" /> {run.isPending ? "Analysing…" : risk ? "Re-run" : "Run analysis"}
+        <Button
+          size="sm"
+          onClick={() => run.mutate()}
+          disabled={!hasDocs || run.isPending}
+          aria-busy={run.isPending}
+          data-testid="button-risks"
+        >
+          <AlertTriangle className="h-4 w-4 mr-2" aria-hidden="true" /> {run.isPending ? "Analysing…" : risk ? "Re-run" : "Run analysis"}
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">

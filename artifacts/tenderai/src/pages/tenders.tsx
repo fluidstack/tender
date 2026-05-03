@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useId } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -100,8 +100,16 @@ function MyTendersTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Label htmlFor="my-tenders-search" className="sr-only">
+            Search my tenders
+          </Label>
           <Input
+            id="my-tenders-search"
+            type="search"
             placeholder="Search tenders…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -192,8 +200,16 @@ function CatalogueTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Label htmlFor="catalogue-search" className="sr-only">
+            Search the catalogue
+          </Label>
           <Input
+            id="catalogue-search"
+            type="search"
             placeholder="Search the catalogue…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -201,7 +217,7 @@ function CatalogueTab() {
             data-testid="input-catalogue-search"
           />
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground" aria-live="polite">
           {data ? `${data.total.toLocaleString()} tenders` : ""}
         </div>
       </div>
@@ -251,9 +267,10 @@ function CatalogueTab() {
                 size="sm"
                 onClick={() => importMut.mutate(t.id)}
                 disabled={importMut.isPending}
+                aria-label={`Import ${t.title} into your workspace`}
                 data-testid={`button-import-${t.id}`}
               >
-                <Download className="h-4 w-4 mr-2" /> Import
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" /> Import
               </Button>
             </CardContent>
           </Card>
@@ -272,6 +289,11 @@ function CreateTenderDialog() {
     category: "",
     closeDate: "",
   });
+  const titleId = useId();
+  const agencyId = useId();
+  const categoryId = useId();
+  const closeDateId = useId();
+  const summaryId = useId();
   const create = useMutation({
     mutationFn: (body: typeof form) =>
       api("/api/tenders", { method: "POST", body: JSON.stringify(body) }),
@@ -281,11 +303,13 @@ function CreateTenderDialog() {
       setForm({ title: "", agency: "", summary: "", category: "", closeDate: "" });
     },
   });
+  const titleMissing = !form.title;
+  const agencyMissing = !form.agency;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button data-testid="button-new-tender">
-          <Plus className="h-4 w-4 mr-2" /> New tender
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> New tender
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -293,34 +317,57 @@ function CreateTenderDialog() {
           <DialogTitle>Add tender</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div>
-            <Label>Title</Label>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} data-testid="input-title" />
+          <div className="space-y-1.5">
+            <Label htmlFor={titleId}>
+              Title <span aria-hidden="true">*</span>
+              <span className="sr-only"> (required)</span>
+            </Label>
+            <Input
+              id={titleId}
+              required
+              aria-required="true"
+              aria-invalid={titleMissing || undefined}
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              data-testid="input-title"
+            />
           </div>
-          <div>
-            <Label>Agency</Label>
-            <Input value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} data-testid="input-agency" />
+          <div className="space-y-1.5">
+            <Label htmlFor={agencyId}>
+              Agency <span aria-hidden="true">*</span>
+              <span className="sr-only"> (required)</span>
+            </Label>
+            <Input
+              id={agencyId}
+              required
+              aria-required="true"
+              aria-invalid={agencyMissing || undefined}
+              value={form.agency}
+              onChange={(e) => setForm({ ...form, agency: e.target.value })}
+              data-testid="input-agency"
+            />
           </div>
-          <div>
-            <Label>Category</Label>
-            <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          <div className="space-y-1.5">
+            <Label htmlFor={categoryId}>Category</Label>
+            <Input id={categoryId} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
           </div>
-          <div>
-            <Label>Close date</Label>
-            <Input type="date" value={form.closeDate} onChange={(e) => setForm({ ...form, closeDate: e.target.value })} />
+          <div className="space-y-1.5">
+            <Label htmlFor={closeDateId}>Close date</Label>
+            <Input id={closeDateId} type="date" value={form.closeDate} onChange={(e) => setForm({ ...form, closeDate: e.target.value })} />
           </div>
-          <div>
-            <Label>Summary</Label>
-            <Textarea value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} rows={4} />
+          <div className="space-y-1.5">
+            <Label htmlFor={summaryId}>Summary</Label>
+            <Textarea id={summaryId} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} rows={4} />
           </div>
         </div>
         <DialogFooter>
           <Button
-            disabled={!form.title || !form.agency || create.isPending}
+            disabled={titleMissing || agencyMissing || create.isPending}
+            aria-busy={create.isPending}
             onClick={() => create.mutate(form)}
             data-testid="button-create-tender"
           >
-            Create
+            {create.isPending ? "Creating…" : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

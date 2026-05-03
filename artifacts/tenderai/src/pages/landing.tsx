@@ -15,15 +15,21 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "") || "";
 export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <a href="#landing-main" className="skip-link">
+        Skip to main content
+      </a>
       <header className="border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
+            <div
+              className="h-8 w-8 rounded-md bg-primary flex items-center justify-center"
+              aria-hidden="true"
+            >
               <Sparkles className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-semibold">TenderAI</span>
           </div>
-          <div className="flex items-center gap-2">
+          <nav aria-label="Account" className="flex items-center gap-2">
             <SignedOut>
               <Link href="/sign-in">
                 <Button variant="ghost" data-testid="button-signin">Sign in</Button>
@@ -37,13 +43,14 @@ export default function Landing() {
                 <Button data-testid="button-dashboard">Open dashboard</Button>
               </Link>
             </SignedIn>
-          </div>
+          </nav>
         </div>
       </header>
 
+      <main id="landing-main" tabIndex={-1} className="focus:outline-none">
       <section className="max-w-6xl mx-auto px-6 py-20 text-center">
         <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent text-sm text-accent-foreground mb-6">
-          <Sparkles className="h-3.5 w-3.5" /> AI-powered tender response platform
+          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> AI-powered tender response platform
         </span>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
           Win more government tenders.
@@ -107,12 +114,13 @@ export default function Landing() {
             className="rounded-xl border border-card-border bg-card p-6 shadow-sm"
             data-testid={`feature-${f.title.toLowerCase().replace(/\s/g, "-")}`}
           >
-            <f.icon className="h-6 w-6 text-primary" />
+            <f.icon className="h-6 w-6 text-primary" aria-hidden="true" />
             <h3 className="mt-3 font-semibold">{f.title}</h3>
             <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
           </div>
         ))}
       </section>
+      </main>
 
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
         © TenderAI. Built for Australian businesses bidding on government work.

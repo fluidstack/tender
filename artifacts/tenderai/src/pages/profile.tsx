@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId, cloneElement, isValidElement, type ReactElement } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { queryClient } from "@/lib/queryClient";
@@ -192,11 +192,16 @@ export default function ProfilePage() {
   );
 }
 
-function Field({ label, children, testid }: { label: string; children: React.ReactNode; testid?: string }) {
+function Field({ label, children }: { label: string; children: React.ReactNode; testid?: string }) {
+  const id = useId();
+  // Wire htmlFor → input id so screen readers announce the label (WCAG 1.3.1, 3.3.2)
+  const child = isValidElement(children)
+    ? cloneElement(children as ReactElement<{ id?: string }>, { id })
+    : children;
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>
-      {children}
+      <Label htmlFor={id}>{label}</Label>
+      {child}
     </div>
   );
 }
@@ -240,8 +245,9 @@ function ListEditor<T extends { id: number }>(props: {
               variant="ghost"
               onClick={() => del.mutate(row.id)}
               data-testid={`button-delete-${row.id}`}
+              aria-label={`Delete ${props.title.toLowerCase()} entry`}
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         ))}
@@ -251,6 +257,7 @@ function ListEditor<T extends { id: number }>(props: {
               <Textarea
                 key={f.key}
                 placeholder={f.label}
+                aria-label={`${props.title} ${f.label}`}
                 value={draft[f.key] ?? ""}
                 onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
                 rows={2}
@@ -259,6 +266,7 @@ function ListEditor<T extends { id: number }>(props: {
               <Input
                 key={f.key}
                 placeholder={f.label}
+                aria-label={`${props.title} ${f.label}`}
                 value={draft[f.key] ?? ""}
                 onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })}
               />
@@ -269,7 +277,7 @@ function ListEditor<T extends { id: number }>(props: {
             onClick={() => create.mutate(draft)}
             disabled={create.isPending}
           >
-            <Plus className="h-3 w-3 mr-1" /> Add
+            <Plus className="h-3 w-3 mr-1" aria-hidden="true" /> Add
           </Button>
         </div>
       </CardContent>
